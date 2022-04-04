@@ -26,7 +26,7 @@ class TriggerScopeManager(SignalInterface):
         self.send("TTL" + str(ttlLine) + "," + str(value), 0)
         
     def run_wave(self, dacArray, ttlArray, params):
-        command = "PROG_WAVE," + str(params["analogLine"]) + "," + str(params["digitalLine"]) + "," + str(params["length"]) + "," + str(params["trigMode"]) + "," + str(params["delay"]) + "," + str(params["reps"])
+        command = "PROG_WAVE," + str(params["analogLine"]) + "," + str(params["digitalLine"]) + "," + str(params["length"]) + "," + str(params["trigMode"]) + "," + str(params["delayDAC"]) + "," + str(params["delayTTL"]) + "," + str(params["reps"])
         self.send(command, 1)
         
         for x in range(params["length"]):
@@ -34,4 +34,5 @@ class TriggerScopeManager(SignalInterface):
             self.send(command, 0)
             
         self.send("STARTWAVE", 0)
+
 

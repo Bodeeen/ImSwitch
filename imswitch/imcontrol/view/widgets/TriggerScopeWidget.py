@@ -36,6 +36,12 @@ class TriggerScopeWidget(Widget):
         self.setVoltage.valueChanged.connect(self.sigRunToggled)
         grid.addWidget(self.setVoltage, 0, 3)
 
+        self.TTLtimeLabel = QtWidgets.QLabel("TTL Time/ms")
+        grid.addWidget(self.TTLtimeLabel, 0, 4)
+
+        self.setTTLtime = QtWidgets.QLineEdit()
+        grid.addWidget(self.setTTLtime, 0, 5)
+
         self.setSlopeLabel = QtWidgets.QLabel("Slope/V")
         grid.addWidget(self.setSlopeLabel, 1, 0)
 
@@ -48,9 +54,19 @@ class TriggerScopeWidget(Widget):
         self.currentVoltage = QtWidgets.QLineEdit()
         self.currentVoltage.setReadOnly(True)
         self.currentVoltage.setText(str(0))
-        # fv = float(self.setVoltage.value())  #
-        # self.currentVoltage.setText(str(round(fv, 3)))
         grid.addWidget(self.currentVoltage, 1, 3)
+
+        self.DACtimeLabel = QtWidgets.QLabel("DAC Time/ms")
+        grid.addWidget(self.DACtimeLabel, 1, 4)
+
+        self.setDACtime = QtWidgets.QLineEdit()
+        grid.addWidget(self.setDACtime, 1, 5)
+
+        self.RepLabel = QtWidgets.QLabel("Repetition")
+        grid.addWidget(self.RepLabel, 1, 6)
+
+        self.setREP = QtWidgets.QLineEdit()
+        grid.addWidget(self.setREP, 1, 7)
     def action(self):
         self.setVoltage.setSingleStep(float(self.incrementVoltage.text()))
 

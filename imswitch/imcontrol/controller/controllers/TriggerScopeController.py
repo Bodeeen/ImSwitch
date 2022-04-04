@@ -19,20 +19,24 @@ class TriggerScopeController(ImConWidgetController):
         self.current = float(self._widget.currentVoltage.text())
         self._widget.currentVoltage.setText(str(round(self.finalVoltage, 3)))
         steps = int(np.ceil(np.abs(self.finalVoltage - self.current) / self.slope)) + 1
+        self.TTLdelay = int(self._widget.setTTLtime.text())
+        self.DACdelay = int(self._widget.setDACtime.text())
+        self.Repetition = int(self._widget.setREP.text())
         dacarray = np.linspace(self.current, self.finalVoltage, steps)
         ttlarray = np.ones(steps, dtype=int)
-        params = self.setParams(1, 1, len(dacarray), 0, 0, 1)
+        params = self.setParams(1, 1, len(dacarray), 0, self.DACdelay, self.TTLdelay, self.Repetition)
         self._master.triggerScopeManager.run_wave(dacarray, ttlarray, params)
 
         #self._master.triggerScopeManager.sendAnalog(1, 1)
 
-    def setParams(self, analogLine, digitalLine, length, trigMode, delay, reps):
+    def setParams(self, analogLine, digitalLine, length, trigMode, delayDAC, delayTTL, reps):
         params = dict([])
         params["analogLine"] = analogLine
         params["digitalLine"] = digitalLine
         params["length"] = length
         params["trigMode"] = trigMode
-        params["delay"] = delay
+        params["delayDAC"] = delayDAC
+        params["delayTTL"] = delayTTL
         params["reps"] = reps
         return params
 
