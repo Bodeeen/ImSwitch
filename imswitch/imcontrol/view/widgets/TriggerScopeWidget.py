@@ -1,10 +1,10 @@
 from qtpy import QtCore, QtWidgets
 
-# from imswitch.imcontrol.view import guitools
-# from .basewidgets import Widget
+from imswitch.imcontrol.view import guitools
+from .basewidgets import Widget
 
 
-class TriggerScopeWidget(QtWidgets.QWidget):
+class TriggerScopeWidget(Widget):
     """ Widget for controlling the parameters of a TriggerScope. """
     sigRunToggled = QtCore.Signal(float)  # (enabled)
 
@@ -30,14 +30,17 @@ class TriggerScopeWidget(QtWidgets.QWidget):
 
         self.nrOfStepsLabel = QtWidgets.QLabel("Steps in scan")
         self.nrOfStepsEdit = QtWidgets.QSpinBox()
+        self.nrOfStepsEdit.setMaximum(1000)
 
         self.TTLtimeLabel = QtWidgets.QLabel("TTL time [ms]")
-        self.TTLtimeEdit = QtWidgets.QDoubleSpinBox()
+        self.TTLtimeEdit = QtWidgets.QSpinBox()
+        self.TTLtimeEdit.setMaximum(1000)
         self.TTLtimeEdit.setSingleStep(0.1)
 
 
         self.stepTimeLabel = QtWidgets.QLabel("Step time [ms]")
-        self.stepTimeEdit = QtWidgets.QDoubleSpinBox()
+        self.stepTimeEdit = QtWidgets.QSpinBox()
+        self.stepTimeEdit.setMaximum(1000)
         self.stepTimeEdit.setSingleStep(0.1)
 
         self.repLabel = QtWidgets.QLabel("Repetitions")

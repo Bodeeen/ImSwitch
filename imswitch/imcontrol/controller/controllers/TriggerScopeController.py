@@ -24,9 +24,9 @@ class TriggerScopeController(ImConWidgetController):
         ttlarray = np.ones(steps, dtype=int)
 
         stepTime = self._widget.stepTimeEdit.value()
-        TTLTile = self._widget.TTLTimeEdit.value()
-        repetitions = self._widget.repEdit
-        params = self.setParams(1, 1, len(dacarray), 0, stepTime, TTLTile, repetitions)
+        TTLTime = self._widget.TTLtimeEdit.value()
+        repetitions = self._widget.repEdit.value()
+        params = self.setParams(1, 1, len(dacarray), 0, stepTime, TTLTime, repetitions)
         self._master.triggerScopeManager.run_wave(dacarray, ttlarray, params)
 
 
