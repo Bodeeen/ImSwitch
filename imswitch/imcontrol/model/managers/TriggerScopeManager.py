@@ -1,9 +1,10 @@
-from imswitch.imcommon.framework import SignalInterface
+from imswitch.imcommon.framework import Signal, SignalInterface
 from imswitch.imcommon.model import initLogger
 import threading
 
 class TriggerScopeManager(SignalInterface):
     """ For interaction with TriggerScope hardware interfaces. """
+    sigScanDone = Signal()
 
     def __init__(self, daqInfo, **lowLevelManagers):
         super().__init__()
@@ -38,7 +39,12 @@ class TriggerScopeManager(SignalInterface):
         s = (params['reps']*params['length']*params['delayDAC'] + 100) / 1000
         self.__logger.debug('Sleeping %s seconds: ' % s)
         self.__logger.debug('Setting DAC to: %s' % dacArray[0])
-        timer = threading.Timer(s, lambda: self.sendAnalog(1, dacArray[0]))
+        timer = threading.Timer(s, lambda: self.finalizeScan([1], [dacArray[0]]))
         timer.start()
 
+    def finalizeScan(self, dac_channels, finalVals):
+        for i, c in enumerate(dac_channels):
+            self.__logger.debug('Setting DAC channel %d to %d' % (c, finalVals[0]))
+            self.sendAnalog(c, finalVals[0])
 
+        self.sigScanDone.emit()
