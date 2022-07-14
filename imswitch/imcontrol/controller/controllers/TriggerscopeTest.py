@@ -65,10 +65,10 @@ def writetgs(tgin):
     return bufa
 
 
-def FWTest():
+def setScanPars():
     setParameter('dimOneChan', 1)
     setParameter('dimOneStartV', 0)
-    setParameter('dimOneLenV', 1)
+    setParameter('dimOneLenV', 2)
     setParameter('dimOneStepSizeV', 0.1)
     setParameter('dimTwoChan', 3)
     setParameter('dimTwoStartV', 0)
@@ -85,6 +85,17 @@ def FWTest():
     setParameter('settlingTimeUs', 1)
     setParameter('dwellTimeUs', 1)
     setParameter('angleRad', np.deg2rad(0))
+
+def setPixelCyclePars():
+    setParameter('p1Line', 0)
+    setParameter('p1StartUs', 0)
+    setParameter('p1EndUs', 1500)
+    setParameter('p2Line', 1)
+    setParameter('p2StartUs', 2000)
+    setParameter('p2EndUs', 3000)
+    setParameter('p3Line', 2)
+    setParameter('p3StartUs', 3500)
+    setParameter('p3EndUs', 5000)
 
 def runRasterScan():
     print(writetgs('RASTER_SCAN\n'))
