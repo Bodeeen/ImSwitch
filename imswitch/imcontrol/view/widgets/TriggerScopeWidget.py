@@ -1,136 +1,120 @@
-from qtpy import QtCore, QtWidgets
 import pyqtgraph as pg
-from imswitch.imcontrol.view import guitools
+from qtpy import QtCore, QtWidgets
+
+from imswitch.imcontrol.view import guitools as guitools
 from .basewidgets import Widget
 
 
-class TriggerScopeWidget(Widget):
-    """ Widget for controlling the parameters of a TriggerScope. """
-    sigRunClicked = QtCore.Signal()
-    sigSaveScan = QtCore.Signal()
-    sigLoadScan = QtCore.Signal()
-    sigSignalParChanged = QtCore.Signal()
-    sigSeqTimeParChanged = QtCore.Signal()
+class TSScanPositionerWidget(Widget):
+    """ Widget containing scanner interface and beadscan reconstruction.
+            This class uses the classes GraphFrame, MultipleScanWidget and IllumImageWidget"""
 
+    sigSaveScanClicked = QtCore.Signal()
+    sigLoadScanClicked = QtCore.Signal()
+    sigRunScanClicked = QtCore.Signal()
+    sigContLaserPulsesToggled = QtCore.Signal(bool)  # (enabled)
+    sigSeqTimeParChanged = QtCore.Signal()
+    sigStageParChanged = QtCore.Signal()
+    sigSignalParChanged = QtCore.Signal()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        galvoTitle = QtWidgets.QLabel('<h2><strong>Galvo</strong></h2>')
-        galvoTitle.setTextFormat(QtCore.Qt.RichText)
-        self.quickSetVoltageLabel = QtWidgets.QLabel('Set position')
-        self.quickSetVoltageLabel.setStyleSheet("font-weight: bold")
+        self.setMinimumHeight(200)
 
-        self.saveGalvoScanBtn = guitools.BetterPushButton('Save Scan')
-        self.loadGalvoScanBtn = guitools.BetterPushButton('Load Scan')
+        self.scanInLiveviewWar = QtWidgets.QMessageBox()
+        self.scanInLiveviewWar.setInformativeText(
+            "You need to be in liveview to scan")
 
-        self.positionLabel = QtWidgets.QLabel("Position [nm]")
-        self.positionEdit = QtWidgets.QDoubleSpinBox()
-        self.positionEdit.setMinimum(-950000)
-        self.positionEdit.setMaximum(950000)
-        self.positionEdit.setDecimals(0)
-        self.positionEdit.setSingleStep(10)
+        self.digModWarning = QtWidgets.QMessageBox()
+        self.digModWarning.setInformativeText(
+            "You need to be in digital laser modulation and external "
+            "frame-trigger acquisition mode")
 
-        self.sequenceLabel = QtWidgets.QLabel('Run scan sequence')
-        self.sequenceLabel.setStyleSheet("font-weight: bold")
+        self.positionerLabel = QtWidgets.QLabel('Positioner')
+        self.positionerLabel.setStyleSheet('font-size: 20pt; font-weight: bold')
+        self.scannerLabel = QtWidgets.QLabel('Scanner')
+        self.scannerLabel.setStyleSheet('font-size: 20pt; font-weight: bold')
 
-        self.stepSizeLabel = QtWidgets.QLabel("Step size [nm]")
-        self.stepSizeEdit = QtWidgets.QDoubleSpinBox()
-        self.stepSizeEdit.setMinimum(-950000)
-        self.stepSizeEdit.setMaximum(950000)
-        self.stepSizeEdit.setDecimals(0)
-        self.stepSizeEdit.setSingleStep(10)
+        self.saveScanBtn = guitools.BetterPushButton('Save Scan')
+        self.loadScanBtn = guitools.BetterPushButton('Load Scan')
 
-        self.nrOfStepsLabel = QtWidgets.QLabel("Steps in scan")
-        self.nrOfStepsEdit = QtWidgets.QSpinBox()
-        self.nrOfStepsEdit.setMaximum(1000)
+        self.seqTimePar = QtWidgets.QLineEdit('10')  # ms
 
-        self.TTLtimeLabel = QtWidgets.QLabel("TTL time [ms]")
-        self.TTLtimeEdit = QtWidgets.QSpinBox()
-        self.TTLtimeEdit.setMaximum(1000)
-        self.TTLtimeEdit.setSingleStep(0.1)
+        self.scanDims = []
 
-
-        self.stepTimeLabel = QtWidgets.QLabel("Step time [ms]")
-        self.stepTimeEdit = QtWidgets.QSpinBox()
-        self.stepTimeEdit.setMaximum(1000)
-        self.stepTimeEdit.setSingleStep(0.1)
-
-        self.repLabel = QtWidgets.QLabel("Repetitions")
-        self.repEdit = QtWidgets.QSpinBox()
-
-        self.saveGalvoScanBtn.clicked.connect(self.sigSaveScan.emit)
-        self.loadGalvoScanBtn.clicked.connect(self.sigLoadScan.emit)
-
-
-        self.runButton = guitools.BetterPushButton('Run')
-        self.runButton.clicked.connect(self.sigRunClicked.emit)
-
-        stageTitle = QtWidgets.QLabel('<h2><strong>Stage</strong></h2>')
-        stageTitle.setTextFormat(QtCore.Qt.RichText)
-
-        #Set widget layout
-        self.grid = QtWidgets.QGridLayout()
-        self.setLayout(self.grid)
-
-        self.grid.addWidget(galvoTitle, 0, 0)
-        self.grid.addWidget(self.quickSetVoltageLabel, 1, 0)
-        self.grid.addWidget(self.saveGalvoScanBtn, 1, 3)
-        self.grid.addWidget(self.positionLabel, 2, 0)
-        self.grid.addWidget(self.positionEdit, 2, 1)
-        self.grid.addWidget(self.loadGalvoScanBtn, 2, 3)
-        self.grid.addWidget(self.sequenceLabel, 3, 0)
-        self.grid.addWidget(self.stepSizeLabel, 4, 0)
-        self.grid.addWidget(self.stepSizeEdit, 4, 1)
-        self.grid.addWidget(self.nrOfStepsLabel, 4, 2)
-        self.grid.addWidget(self.nrOfStepsEdit, 4, 3)
-        self.grid.addWidget(self.TTLtimeLabel, 5, 0)
-        self.grid.addWidget(self.TTLtimeEdit, 5, 1)
-        self.grid.addWidget(self.stepTimeLabel, 5, 2)
-        self.grid.addWidget(self.stepTimeEdit, 5, 3)
-        self.grid.addWidget(self.repLabel, 6, 0)
-        self.grid.addWidget(self.repEdit, 6, 1)
-        self.grid.addWidget(self.runButton, 6, 2)
-        self.grid.addWidget(stageTitle, 7, 0)
-
-        self.loadStageScanBtn = guitools.BetterPushButton('Load stage scan')
-        self.saveStageScanBtn = guitools.BetterPushButton('Save stage scan')
-        self.stageScanBtn = guitools.BetterPushButton('Run stage scan')
-        self.dwellTimePar = QtWidgets.QSpinBox()
-        self.scanPar = {}
+        self.scanPar = {'seqTime': self.seqTimePar}
 
         self.pxParameters = {}
         self.pxParValues = {}
+
+        self.scanButton = guitools.BetterPushButton('Run Scan')
+
+        self.repeatBox = QtWidgets.QCheckBox('Repeat')
 
         self.graph = GraphFrame()
         self.graph.setEnabled(False)
         self.graph.setFixedHeight(128)
 
-        self.dwellTimePar.textChanged.connect(self.sigSeqTimeParChanged)
+        self.scrollContainer = QtWidgets.QGridLayout()
+        self.scrollContainer.setContentsMargins(0, 0, 0, 0)
+        self.setLayout(self.scrollContainer)
 
+        self.grid = QtWidgets.QGridLayout()
+        self.gridContainer = QtWidgets.QWidget()
+        self.gridContainer.setLayout(self.grid)
 
-    def setRunButtonChecked(self, checked):
-        self.runButton.setEnabled(not checked)
-        self.runButton.setCheckable(checked)
-        self.runButton.setChecked(checked)
+        self.scrollArea = QtWidgets.QScrollArea()
+        self.scrollArea.setFrameShape(QtWidgets.QFrame.NoFrame)
+        self.scrollArea.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
+        self.scrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        self.scrollArea.setWidget(self.gridContainer)
+        self.scrollArea.setWidgetResizable(True)
+        self.scrollContainer.addWidget(self.scrollArea)
+        self.gridContainer.installEventFilter(self)
 
-    def action(self):
-        self.setVoltage.setSingleStep(float(self.incrementVoltage.text()))
-
+        # Connect signals
+        self.saveScanBtn.clicked.connect(self.sigSaveScanClicked)
+        self.loadScanBtn.clicked.connect(self.sigLoadScanClicked)
+        self.scanButton.clicked.connect(self.sigRunScanClicked)
+        self.seqTimePar.textChanged.connect(self.sigSeqTimeParChanged)
+        self.contLaserPulsesRadio.toggled.connect(self.sigContLaserPulsesToggled)
 
     def initControls(self, positionerNames, TTLDeviceNames, TTLTimeUnits):
-        currentRow = 8
         self.scanDims = positionerNames
+        currentRow = 0
+        self.grid.addWidget(incrementSize, currentRow, 1)
+        for index, positionerName in enumerate(positionerNames):
+            # Scan params
+            incrementSize = QtWidgets.QDoubleSpinBox('0')
+            self.positionParLabels['incrementSize' + positionerName] = incrementSize
+            currentPos = QtWidgets.QDoubleSpinBox('0')
+            self.positionParLabels['currentPos' + positionerName] = currentPos
+
+            self.grid.addWidget(QtWidgets.QLabel(positionerName), currentRow, 0)
+            self.grid.addWidget(incrementSize, currentRow, 1)
+            self.grid.addWidget(currentPos, currentRow, 2)
+
+            currentRow += 1
+
+            # Connect signals
+            self.positionParLabels['incrementSize' + positionerName].valueChanged.connect(lambda:
+                                                                                          self.sigPosIncrementChanged.emit(positionerName))
+            self.positionParLabels['currentPos' + positionerName].valueChanged.connect(lambda:
+                                                                                       self.sigPosParameterChanged.emit(positionerName))
+
+
 
         # Add general buttons
-        self.grid.addWidget(self.loadStageScanBtn, currentRow, 0)
-        self.grid.addWidget(self.saveStageScanBtn, currentRow, 1)
+        self.grid.addWidget(self.loadScanBtn, currentRow, 0)
+        self.grid.addWidget(self.saveScanBtn, currentRow, 1)
         self.grid.addItem(
             QtWidgets.QSpacerItem(40, 20,
                                   QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum),
             currentRow, 4
         )
-        self.grid.addWidget(self.stageScanBtn, currentRow, 3)
+        self.grid.addWidget(self.repeatBox, currentRow, 5)
+        self.grid.addWidget(self.scanButton, currentRow, 6)
         currentRow += 1
 
         # Add space item to make the grid look nicer
@@ -191,7 +175,6 @@ class TriggerScopeWidget(Widget):
             currentRow += 1
 
             # Connect signals
-            """
             self.scanPar['size' + positionerName].textChanged.connect(self.sigStageParChanged)
             self.scanPar['stepSize' + positionerName].textChanged.connect(self.sigStageParChanged)
             self.scanPar['pixels' + positionerName].textChanged.connect(self.sigStageParChanged)
@@ -199,11 +182,10 @@ class TriggerScopeWidget(Widget):
             self.scanPar['scanDim' + str(index)].currentIndexChanged.connect(
                 self.sigStageParChanged
             )
-            """
 
         # Add dwell time parameter
-        self.grid.addWidget(QtWidgets.QLabel('Dwell time (ms):'), currentRow, 5)
-        self.grid.addWidget(self.dwellTimePar, currentRow, 6)
+        self.grid.addWidget(QtWidgets.QLabel('Dwell (ms):'), currentRow, 5)
+        self.grid.addWidget(self.seqTimePar, currentRow, 6)
 
         # Add space item to make the grid look nicer
         self.grid.addItem(
@@ -236,11 +218,105 @@ class TriggerScopeWidget(Widget):
             self.pxParameters['sta' + deviceName].textChanged.connect(self.sigSignalParChanged)
             self.pxParameters['end' + deviceName].textChanged.connect(self.sigSignalParChanged)
 
-
         # Add pulse graph
         self.grid.addWidget(self.graph, graphRow, 3, currentRow - graphRow, 5)
 
-    def plotSignalGraph(self, areas, signals, colors):
+    def isScanMode(self):
+        return self.scanRadio.isChecked()
+
+    def isContLaserMode(self):
+        return self.contLaserPulsesRadio.isChecked()
+
+    def repeatEnabled(self):
+        return self.repeatBox.isChecked()
+
+    def getScanDim(self, index):
+        return self.scanPar['scanDim' + str(index)].currentText()
+
+    def getScanSize(self, positionerName):
+        return float(self.scanPar['size' + positionerName].text())
+
+    def getScanStepSize(self, positionerName):
+        return float(self.scanPar['stepSize' + positionerName].text())
+
+    def getScanCenterPos(self, positionerName):
+        return float(self.scanPar['center' + positionerName].text())
+
+    def getTTLIncluded(self, deviceName):
+        return (self.pxParameters['sta' + deviceName].text() != '' and
+                self.pxParameters['end' + deviceName].text() != '')
+
+    def getTTLStarts(self, deviceName):
+        return list(map(lambda s: float(s) / 1000 if s else None,
+                        self.pxParameters['sta' + deviceName].text().split(',')))
+
+    def getTTLEnds(self, deviceName):
+        return list(map(lambda e: float(e) / 1000 if e else None,
+                        self.pxParameters['end' + deviceName].text().split(',')))
+
+    def getSeqTimePar(self):
+        return float(self.seqTimePar.text()) / 1000
+
+    def setScanMode(self):
+        self.scanRadio.setChecked(True)
+
+    def setContLaserMode(self):
+        self.contLaserPulsesRadio.setChecked(True)
+
+    def setRepeatEnabled(self, enabled):
+        self.repeatBox.setChecked(enabled)
+
+    def setScanButtonChecked(self, checked):
+        self.scanButton.setEnabled(not checked)
+        self.scanButton.setCheckable(checked)
+        self.scanButton.setChecked(checked)
+
+    def setScanDim(self, index, positionerName):
+        scanDimPar = self.scanPar['scanDim' + str(index)]
+        scanDimPar.setCurrentIndex(scanDimPar.findText(positionerName))
+
+    def setScanSize(self, positionerName, size):
+        self.scanPar['size' + positionerName].setText(str(round(size, 3)))
+
+    def setScanStepSize(self, positionerName, stepSize):
+        self.scanPar['stepSize' + positionerName].setText(str(round(stepSize, 3)))
+
+    def setScanCenterPos(self, positionerName, centerPos):
+        self.scanPar['center' + positionerName].setText(str(round(centerPos, 3)))
+
+    def setScanPixels(self, positionerName, pixels):
+        self.scanPar['pixels' + positionerName].setText(str(pixels))
+
+    def setTTLStarts(self, deviceName, starts):
+        self.pxParameters['sta' + deviceName].setText(
+            ','.join(map(lambda s: str(round(1000 * s, 3)), starts))
+        )
+
+    def setTTLEnds(self, deviceName, ends):
+        self.pxParameters['end' + deviceName].setText(
+            ','.join(map(lambda e: str(round(1000 * e, 3)), ends))
+        )
+
+    def unsetTTL(self, deviceName):
+        self.pxParameters['sta' + deviceName].setText('')
+        self.pxParameters['end' + deviceName].setText('')
+
+    def setSeqTimePar(self, seqTimePar):
+        self.seqTimePar.setText(str(round(float(1000 * seqTimePar), 3)))
+
+    def setScanDimEnabled(self, index, enabled):
+        self.scanPar['scanDim' + str(index)].setEnabled(enabled)
+
+    def setScanSizeEnabled(self, positionerName, enabled):
+        self.scanPar['size' + positionerName].setEnabled(enabled)
+
+    def setScanStepSizeEnabled(self, positionerName, enabled):
+        self.scanPar['stepSize' + positionerName].setEnabled(enabled)
+
+    def setScanCenterPosEnabled(self, positionerName, enabled):
+        self.scanPar['center' + positionerName].setEnabled(enabled)
+
+    def plotSignalGraph(self, areas, signals, colors, sampleRate):
         if len(areas) != len(signals) or len(signals) != len(colors):
             raise ValueError('Arguments "areas", "signals" and "colors" must be of equal length')
 
@@ -249,6 +325,19 @@ class TriggerScopeWidget(Widget):
             self.graph.plot.plot(areas[i], signals[i], pen=pg.mkPen(colors[i]))
 
         self.graph.plot.setYRange(-0.1, 1.1)
+        self.graph.plot.getAxis('bottom').setScale(1000 / sampleRate)
+
+    def eventFilter(self, source, event):
+        if source is self.gridContainer and event.type() == QtCore.QEvent.Resize:
+            # Set correct minimum width (otherwise things can go outside the widget because of the
+            # scroll area)
+            width = self.gridContainer.minimumSizeHint().width() \
+                    + self.scrollArea.verticalScrollBar().width()
+            self.scrollArea.setMinimumWidth(width)
+            self.setMinimumWidth(width)
+
+        return False
+
 
 class GraphFrame(pg.GraphicsLayoutWidget):
     """Creates the plot that plots the preview of the pulses."""
@@ -258,9 +347,18 @@ class GraphFrame(pg.GraphicsLayoutWidget):
         self.plot = self.addPlot(row=1, col=0)
 
 
-if __name__ == '__main__':
-    import sys
-    app = QtWidgets.QApplication(sys.argv)
-    wid = TriggerScopeWidget()
-    wid.show()
-    sys.exit(app.exec_())
+# Copyright (C) 2020-2021 ImSwitch developers
+# This file is part of ImSwitch.
+#
+# ImSwitch is free software: you can redistribute it and/or modify
+# it under the terms of the GNU General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# (at your option) any later version.
+#
+# ImSwitch is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU General Public License for more details.
+#
+# You should have received a copy of the GNU General Public License
+# along with this program.  If not, see <https://www.gnu.org/licenses/>.
