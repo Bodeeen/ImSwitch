@@ -1,6 +1,6 @@
-from imswitch.imcommon.framework import Signal, SignalInterface
 from imswitch.imcommon.model import initLogger
 import threading
+from imswitch.imcommon.framework import Signal, SignalInterface, Timer, Thread, Worker
 
 class TriggerScopeManager(SignalInterface):
     """ For interaction with TriggerScope hardware interfaces. """
@@ -13,6 +13,22 @@ class TriggerScopeManager(SignalInterface):
         ]
         self.__logger = initLogger(self)
         self.__logger.info(self.send("*", 1))
+
+        self._serialMonitor = SerialMonitor(self._rs232manager, 1)
+        self._thread = Thread()
+        self._serialMonitor.moveToThread(self._thread)
+        self._thread.started.connect(self._serialMonitor.run)
+        self._thread.finished.connect(self._serialMonitor.stop)
+        self._thread.start()
+        
+        #Connect signals from serialMonitor
+        self._serialMonitor.sigScanDone.connect(self.scanDone)
+
+    def __del__(self):
+        self._thread.quit()
+        self._thread.wait()
+        if hasattr(super(), '__del__'):
+            super().__del__()
 
     def send(self, command, recieve):  
         if recieve:
@@ -48,3 +64,30 @@ class TriggerScopeManager(SignalInterface):
             self.sendAnalog(c, finalVals[0])
 
         self.sigScanDone.emit()
+
+
+class SerialMonitor(Worker):
+    sigScanDone = Signal()
+    def __init__(self, rs232Manager, updatePeriod):
+        super().__init__()
+
+        self._rs232Manager = rs232Manager
+        self._updatePeriod = updatePeriod
+        self._vtimer = None
+
+    def run(self):
+        self._vtimer = Timer()
+        self._vtimer.timeout.connect(self.checkSerial)
+        self._vtimer.start(self._updatePeriod)
+
+    def stop(self):
+        if self._vtimer is not None:
+            self._vtimer.stop()
+
+    def checkSerial(self):
+
+        msg = self._rs232Manager.read()
+        #Check content of message
+        if msg == 'Scan done':
+            self.sigScanDone.emit()
+
