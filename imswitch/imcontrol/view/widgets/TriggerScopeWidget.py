@@ -16,7 +16,7 @@ class TriggerScopeWidget(Widget):
     sigStageParChanged = QtCore.Signal()
     sigSignalParChanged = QtCore.Signal()
     sigPosIncrementChanged = QtCore.Signal(str)
-    sigPosParameterChanged = QtCore.Signal(str)
+    sigPosParameterChanged = QtCore.Signal(str, float)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -81,6 +81,9 @@ class TriggerScopeWidget(Widget):
         self.scanButton.clicked.connect(self.sigRunScanClicked)
         self.seqTimePar.textChanged.connect(self.sigSeqTimeParChanged)
 
+    def printLog(self, string):
+        print(string)
+
     def initControls(self, positionerNames, TTLDeviceNames, TTLTimeUnits):
         self.scanDims = positionerNames
         currentRow = 0
@@ -97,7 +100,7 @@ class TriggerScopeWidget(Widget):
             incrementSize.setValue(0.1)
             incrementSize.setSingleStep(0.1)
             self.positionPars['incrementSize' + positionerName] = incrementSize
-            currentPos = QtWidgets.QDoubleSpinBox()
+            currentPos = guitools.NamedDoubleSpinBox(positionerName)
             currentPos.setValue(0)
             currentPos.setSingleStep(incrementSize.value())
             self.positionPars['currentPos' + positionerName] = currentPos
@@ -109,10 +112,10 @@ class TriggerScopeWidget(Widget):
             currentRow += 1
 
             # Connect signals
-            self.positionPars['incrementSize' + positionerName].valueChanged.connect(lambda:
-                                                                                     self.sigPosIncrementChanged.emit(positionerName))
-            self.positionPars['currentPos' + positionerName].valueChanged.connect(lambda:
-                                                                                  self.sigPosParameterChanged.emit(positionerName))
+            self.positionPars['incrementSize' + positionerName].valueChanged.connect(
+                self.positionPars['currentPos' + positionerName].setSingleStep)
+
+            self.positionPars['currentPos' + positionerName].sigValueOfNameChanged.connect(self.sigPosParameterChanged)
 
 
         # Add space item to make the grid look nicer

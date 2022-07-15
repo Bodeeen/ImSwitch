@@ -48,10 +48,10 @@ class TriggerScopeController(ImConWidgetController):
         self.updateScanTTLAttrs()
 
         # Connect NidaqManager signals
-        self._master.TriggerScopeManagerManager.sigScanStarted.connect(
+        self._master.triggerScopeManager.sigScanStarted.connect(
             lambda: self.emitScanSignal(self._commChannel.sigScanStarted)
         )
-        self._master.TriggerScopeManagerManager.sigScanDone.connect(self.scanDone)
+        self._master.triggerScopeManager.sigScanDone.connect(self.scanDone)
 
         # Connect CommunicationChannel signals
         self._commChannel.sigRunScan.connect(self.runScanExternal)
@@ -69,7 +69,6 @@ class TriggerScopeController(ImConWidgetController):
         self._widget.sigSignalParChanged.connect(self.plotSignalGraph)
         self._widget.sigSignalParChanged.connect(self.updateScanTTLAttrs)
         self._widget.sigPosParameterChanged.connect(self.changePosition)
-        self._widget.sigPosIncrementChanged.connect(self.changeIncrement)
 
     def getDimsScan(self):
         # TODO: Make sure this works as intended
@@ -165,6 +164,11 @@ class TriggerScopeController(ImConWidgetController):
             self.settingParameters = False
             self.plotSignalGraph()
 
+
+    def changePosition(self, positionerName, newPos):
+        self._logger.debug('Setting positioner: ' + str(positionerName) + ' to ' + str(newPos))
+        #self._master.TriggerScopeManager.setPosition(newPos)
+
     def runScanExternal(self, recalculateSignals, isNonFinalPartOfSequence):
         self._widget.setScanMode()
         self._widget.setRepeatEnabled(False)
@@ -183,7 +187,7 @@ class TriggerScopeController(ImConWidgetController):
 
             if not sigScanStartingEmitted:
                 self.emitScanSignal(self._commChannel.sigScanStarting)
-            self._master.TriggerScopeManager.runScan(self._analogParameterDict, self._digitalParameterDict)
+            self._master.triggerScopeManager.runScan(self._analogParameterDict, self._digitalParameterDict)
         except Exception:
             self._logger.error(traceback.format_exc())
             self.isRunning = False
@@ -282,8 +286,7 @@ class TriggerScopeController(ImConWidgetController):
         self._widget.plotSignalGraph(areas, signals, colors)
 
     def emitScanSignal(self, signal, *args):
-        if not self._widget.isContLaserMode():  # Cont. laser pulses mode is not a real scan
-            signal.emit(*args)
+        signal.emit(*args)
 
     def attrChanged(self, key, value):
         if self.settingAttr or len(key) != 2:

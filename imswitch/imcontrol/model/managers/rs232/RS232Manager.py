@@ -42,6 +42,13 @@ class RS232Manager:
         """ Sends the specified command to the RS232 device. """
         return self._rs232port.write(arg)
 
+    def read(self, *args, **kwargs):
+        """Receive string from instrument."""
+        return self._rs232port.read(*args, **kwargs)
+
+    def setTimeout(self, timeout):
+        self._rs232port.resource.timeout = timeout
+
     def finalize(self):
         self._rs232port.close()
 

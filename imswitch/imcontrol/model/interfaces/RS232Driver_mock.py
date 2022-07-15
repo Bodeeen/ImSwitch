@@ -14,6 +14,14 @@ class MockRS232Driver:
         self.__logger.debug(f"Sending the following to {self._settings['port']}: {arg}")
         pass
 
+    def send(self, arg):
+        self.__logger.debug(f"Sending the following to {self._settings['port']}: {arg}")
+        pass
+
+    def read(self):
+        self.__logger.debug(f"Reading from {self._settings['port']}")
+        return 'Recieved message"'
+
     def initialize(self):
         pass
 
