@@ -87,6 +87,7 @@ def setScanPars():
     setParameter('angleRad', np.deg2rad(0))
 
 def setPixelCyclePars():
+    setParameter('sequenceTimeUs', 10000)
     setParameter('p1Line', 0)
     setParameter('p1StartUs', 0)
     setParameter('p1EndUs', 1500)

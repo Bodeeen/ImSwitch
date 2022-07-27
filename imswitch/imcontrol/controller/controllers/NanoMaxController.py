@@ -2,6 +2,17 @@ from thorlabs_apt_device.devices.bsc import BSC
 from qtpy import QtCore, QtWidgets
 import time
 """
+Windows Only: Enable Virtual COM Port¶
+On Windows, the virtual serial communications port (VCP) may need to be enabled in the driver options for the USB 
+interface device. First, open the Windows Device Manager. If plugging in the controller causes a new COM device to 
+appear under the “Ports (COM & LPT)” section, then there is nothing more to do. If a new COM device does not appear, 
+then find the controller device under “Universal Serial Bus Controllers”, it may be called “Thorlabs APT Controller” 
+or similar (see what new device appears when plugging in the controller). Right-click->Properties->Advanced tab, check 
+the “Load VCP” box, then OK out of the dialog back to the device manager. Unplug and re-plug the USB connection to the 
+controller, and ensure than a new COM device now appears.
+"""
+
+"""
 Note that the bay-type devices such as BBD and BSCs are referred to as a x-channel controllers, but the actual device 
 layout is that the controller is a “rack” system with three bays, where x number of single-channel controller cards may 
 be installed. In other words, the BBD203 “3 channel” controller actually has 3 populated bays 
@@ -86,6 +97,8 @@ class NanoMaxControl(QtWidgets.QWidget):
         grid.addWidget(self.pos2EditLabel, 5, 1, 1, 1)
 
 
+        print('Homing devices')
+
         self.timer = QtCore.QTimer()
         self.timer.timeout.connect(self.setInitialPos)
         self.timer.start(15000)
@@ -102,6 +115,7 @@ class NanoMaxControl(QtWidgets.QWidget):
         return mm
 
     def setInitialPos(self):
+        print('Setting initial position')
         self.move_relative_mm(self.initialZPos_mm, 2)
         self.timer.timeout.disconnect(self.setInitialPos)
         self.timer.timeout.connect(self.getPosition)
@@ -183,6 +197,6 @@ class NanoMaxControl(QtWidgets.QWidget):
 if __name__ == '__main__':
     import sys
     app = QtWidgets.QApplication(sys.argv)
-    wid = NanoMaxControl('COM17')
+    wid = NanoMaxControl('COM21')
     wid.show()
     sys.exit(app.exec_())

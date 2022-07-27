@@ -267,6 +267,14 @@ class SetupInfo:
 
         return devices
 
+    def getPositioners(self):
+        """ :meta private: """
+        devices = {}
+        for deviceInfos in self.positioners:
+            devices.update(deviceInfos)
+
+        return devices
+
     def getAllDevices(self):
         """ :meta private: """
         devices = {}

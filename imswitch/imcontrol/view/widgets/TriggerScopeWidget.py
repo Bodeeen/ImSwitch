@@ -31,9 +31,6 @@ class TriggerScopeWidget(Widget):
         self.digModWarning.setInformativeText(
             "You need to be in digital laser modulation and external "
             "frame-trigger acquisition mode")
-
-        self.positionerLabel = QtWidgets.QLabel('Positioner')
-        self.positionerLabel.setStyleSheet('font-size: 14pt; font-weight: bold')
         self.scannerLabel = QtWidgets.QLabel('Scanner')
         self.scannerLabel.setStyleSheet('font-size: 14pt; font-weight: bold')
 
@@ -87,36 +84,8 @@ class TriggerScopeWidget(Widget):
     def initControls(self, positionerNames, TTLDeviceNames, TTLTimeUnits):
         self.scanDims = positionerNames
         currentRow = 0
-        self.grid.addWidget(self.positionerLabel, currentRow, 0)
+
         currentRow += 1
-
-        self.grid.addWidget(QtWidgets.QLabel('Increment size [µm]'), currentRow, 1)
-        self.grid.addWidget(QtWidgets.QLabel('Current position [µm]'), currentRow, 2)
-        currentRow += 1
-
-        for index, positionerName in enumerate(positionerNames):
-            # Scan params
-            incrementSize = QtWidgets.QDoubleSpinBox()
-            incrementSize.setValue(0.1)
-            incrementSize.setSingleStep(0.1)
-            self.positionPars['incrementSize' + positionerName] = incrementSize
-            currentPos = guitools.NamedDoubleSpinBox(positionerName)
-            currentPos.setValue(0)
-            currentPos.setSingleStep(incrementSize.value())
-            self.positionPars['currentPos' + positionerName] = currentPos
-
-            self.grid.addWidget(QtWidgets.QLabel(positionerName), currentRow, 0)
-            self.grid.addWidget(incrementSize, currentRow, 1)
-            self.grid.addWidget(currentPos, currentRow, 2)
-
-            currentRow += 1
-
-            # Connect signals
-            self.positionPars['incrementSize' + positionerName].valueChanged.connect(
-                self.positionPars['currentPos' + positionerName].setSingleStep)
-
-            self.positionPars['currentPos' + positionerName].sigValueOfNameChanged.connect(self.sigPosParameterChanged)
-
 
         # Add space item to make the grid look nicer
         self.grid.addItem(
@@ -231,9 +200,6 @@ class TriggerScopeWidget(Widget):
         # Add pulse graph
         self.grid.addWidget(self.graph, graphRow, 3, currentRow - graphRow, 5)
 
-    def isScanMode(self):
-        return self.scanRadio.isChecked()
-
     def isContLaserMode(self):
         return self.contLaserPulsesRadio.isChecked()
 
@@ -266,9 +232,6 @@ class TriggerScopeWidget(Widget):
 
     def getSeqTimePar(self):
         return float(self.seqTimePar.text()) / 1000
-
-    def setScanMode(self):
-        self.scanRadio.setChecked(True)
 
     def setContLaserMode(self):
         self.contLaserPulsesRadio.setChecked(True)

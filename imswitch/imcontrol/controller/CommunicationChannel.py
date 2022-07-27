@@ -77,8 +77,8 @@ class CommunicationChannel(SignalInterface):
             raise RuntimeError('Required image widget not available')
 
     def getDimsScan(self):
-        if 'Scan' in self.__main.controllers:
-            return self.__main.controllers['Scan'].getDimsScan()
+        if 'TriggerScope' in self.__main.controllers:
+            return self.__main.controllers['TriggerScope'].getDimsScan()
         else:
             raise RuntimeError('Required scan widget not available')
 

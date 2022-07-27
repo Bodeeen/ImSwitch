@@ -84,7 +84,7 @@ class TriggerScopeController(ImConWidgetController):
 
     def getNumScanPositions(self):
         """ Returns the number of scan positions for the configured scan. """
-        _, positions, _ = self._master.scanManager.getScanSignalsDict(self._analogParameterDict)
+        _, positions, _ = self._master.triggerScopeManager.getScanSignalsDict(self._analogParameterDict)
         numPositions = functools.reduce(lambda x, y: x * y, positions)
         return numPositions
 
@@ -104,7 +104,6 @@ class TriggerScopeController(ImConWidgetController):
 
         config['analogParameterDict'] = self._analogParameterDict
         config['digitalParameterDict'] = self._digitalParameterDict
-        config['Modes'] = {'scan_or_not': self._widget.isScanMode()}
 
         with open(filePath, 'w') as configfile:
             config.write(configfile)
@@ -165,12 +164,37 @@ class TriggerScopeController(ImConWidgetController):
             self.plotSignalGraph()
 
 
+    def getTriggerscopeParameters(self):
+        # Get analog parameters
+        AOtargets = []
+        lengthsVolt = []
+        stepSizesVolt = []
+        startPosVolt = []
+        rasterScanParameters = {'Analog': None, 'Digital': None}
+        for dim in range(len(self._analogParameterDict['target_device'])):
+            target = self._widget.scanPar['scanDim' + str(dim)].currentText()
+            convFactor = self.positioners[target].managerProperties['conversionFactor']
+            index = self._analogParameterDict['target_device'].index(target)
+            AOtargets.append(target)
+            lengthsVolt.append(self._analogParameterDict['axis_length'][index] / convFactor)
+            stepSizesVolt.append(self._analogParameterDict['axis_step_size'][index] / convFactor)
+            startPosVolt.append(self._analogParameterDict['axis_startpos'][index] / convFactor)
+
+        rasterScanParameters['Analog'] = {'targets': AOtargets,
+                                          'lengths': lengthsVolt,
+                                          'stepSizes': stepSizesVolt,
+                                          'startPos': startPosVolt}
+
+        rasterScanParameters['Digital'] = self._digitalParameterDict
+
+        return rasterScanParameters
+
+
     def changePosition(self, positionerName, newPos):
         self._logger.debug('Setting positioner: ' + str(positionerName) + ' to ' + str(newPos))
         #self._master.TriggerScopeManager.setPosition(newPos)
 
     def runScanExternal(self, recalculateSignals, isNonFinalPartOfSequence):
-        self._widget.setScanMode()
         self._widget.setRepeatEnabled(False)
         self.runScanAdvanced(recalculateSignals=recalculateSignals,
                              isNonFinalPartOfSequence=isNonFinalPartOfSequence,
@@ -187,7 +211,8 @@ class TriggerScopeController(ImConWidgetController):
 
             if not sigScanStartingEmitted:
                 self.emitScanSignal(self._commChannel.sigScanStarting)
-            self._master.triggerScopeManager.runScan(self._analogParameterDict, self._digitalParameterDict)
+            triggerscopeParameters = self.getTriggerscopeParameters()
+            self._master.triggerScopeManager.runScan(triggerscopeParameters, type='rasterScan')
         except Exception:
             self._logger.error(traceback.format_exc())
             self.isRunning = False
@@ -196,6 +221,7 @@ class TriggerScopeController(ImConWidgetController):
         self.doingNonFinalPartOfSequence = False  # So that sigScanEnded is emitted
         if not self.isRunning:
             self.scanFailed()
+
 
     def scanDone(self):
         self._logger.debug('Scan done')
@@ -229,7 +255,7 @@ class TriggerScopeController(ImConWidgetController):
             positionerName = self._widget.getScanDim(i)
             size = self._widget.getScanSize(positionerName)
             stepSize = self._widget.getScanStepSize(positionerName)
-            start = self._widget.positionPars['currentPos' + positionerName].value()
+            start = list(self._master.positionersManager[positionerName].position.values())[0] # values() returns an array since the positionar can have multiple axis, here we only access the first value
 
             self._analogParameterDict['target_device'].append(positionerName)
             self._analogParameterDict['axis_length'].append(size)
@@ -244,8 +270,8 @@ class TriggerScopeController(ImConWidgetController):
                 continue
 
             self._digitalParameterDict['target_device'].append(deviceName)
-            self._digitalParameterDict['TTL_start'].append(self._widget.getTTLStarts(deviceName))
-            self._digitalParameterDict['TTL_end'].append(self._widget.getTTLEnds(deviceName))
+            self._digitalParameterDict['TTL_start'].append(self._widget.getTTLStarts(deviceName)[0]) #For now only accepts one pulse and therefor takes the first index value
+            self._digitalParameterDict['TTL_end'].append(self._widget.getTTLEnds(deviceName)[0]) #Same
 
         self._digitalParameterDict['sequence_time'] = self._widget.getSeqTimePar()
 

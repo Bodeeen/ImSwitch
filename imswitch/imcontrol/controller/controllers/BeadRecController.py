@@ -61,7 +61,7 @@ class BeadRecController(ImConWidgetController):
             self.thread.wait()
 
     def update(self):
-        self._widget.updateImage(np.resize(self.recIm, self.dims + 1))
+        self._widget.updateImage(np.resize(self.recIm, self.dims))
 
 
 class BeadWorker(Worker):

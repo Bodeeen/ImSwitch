@@ -30,9 +30,7 @@ class TriggerScopePositionerManager(PositionerManager):
     def setPosition(self, position, axis):
         self._position[self.axes[0]] = position
         self._triggerScopeManager.setAnalog(target=self.name,
-                                     voltage=position / self._conversionFactor,
-                                     min_val=self._minVolt,
-                                     max_val=self._maxVolt)
+                                     voltage=position / self._conversionFactor)
 
 
 # Copyright (C) 2020-2021 ImSwitch developers
