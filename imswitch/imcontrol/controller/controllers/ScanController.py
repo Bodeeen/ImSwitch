@@ -141,12 +141,12 @@ class ScanController(SuperScanController):
                 config._sections['digitalParameterDict'][key]
             )
 
-        scanOrNot = (config._sections['Modes']['scan_or_not'] == 'True')
+        #scanOrNot = (config._sections['Modes']['scan_or_not'] == 'True')
 
-        if scanOrNot:
-            self._widget.setScanMode()
-        else:
-            self._widget.setContLaserMode()
+        # if scanOrNot:
+        #     self._widget.setScanMode()
+        # else:
+        #     self._widget.setContLaserMode()
 
         self.setParameters()
 

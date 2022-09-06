@@ -17,10 +17,11 @@ class BeadRecController(ImConWidgetController):
         self.thread = Thread()
         self.beadWorker.moveToThread(self.thread)
         self.thread.started.connect(self.beadWorker.run)
-
+        self.resetIm = False
         # Connect BeadRecWidget signals
         self._widget.sigROIToggled.connect(self.roiToggled)
         self._widget.sigRunClicked.connect(self.run)
+        self._commChannel.sigScanStarting.connect(self.reset)
 
     def __del__(self):
         self.thread.quit()
@@ -48,6 +49,9 @@ class BeadRecController(ImConWidgetController):
         if not self.roiAdded:
             self._commChannel.sigAddItemToVb.emit(self._widget.getROIGraphicsItem())
             self.roiAdded = True
+
+    def reset(self):
+        self.resetIm = True
 
     def run(self):
         if not self.running:
@@ -78,6 +82,9 @@ class BeadWorker(Worker):
         i = 0
 
         while self.__controller.running:
+            if self.__controller.resetIm == True:
+                i = 0
+                self.__controller.resetIm = False
             newImages = self.__controller._master.detectorsManager.execOnCurrent(
                 lambda c: c.getChunk()
             )

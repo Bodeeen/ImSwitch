@@ -77,9 +77,9 @@ class TriggerScopeController(ImConWidgetController):
         lengths = self._analogParameterDict['axis_length']
         stepSizes = self._analogParameterDict['axis_step_size']
 
-        x = lengths[0] / stepSizes[0]
-        y = lengths[1] / stepSizes[1]
-
+        x = int(np.floor(lengths[0] / stepSizes[0])) + 1
+        y = int(np.floor(lengths[1] / stepSizes[1])) + 1
+        self._logger.debug('x is = ' + str(x) + 'and y is = ' + str(y))
         return x, y
 
     def getNumScanPositions(self):
@@ -186,7 +186,6 @@ class TriggerScopeController(ImConWidgetController):
                                           'startPos': startPosVolt}
 
         rasterScanParameters['Digital'] = self._digitalParameterDict
-
         return rasterScanParameters
 
 

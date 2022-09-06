@@ -157,16 +157,16 @@ class NanoMaxControl(QtWidgets.QWidget):
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key_Right:
             print('Right key pressed')
-            self.jog(True, lr_chan)
+            self.jog(False, ud_chan)
         elif event.key() == QtCore.Qt.Key_Left:
             print('Left key pressed')
-            self.jog(False, lr_chan)
+            self.jog(True, ud_chan)
         elif event.key() == QtCore.Qt.Key_Up:
             print('Up key pressed')
-            self.jog(True, ud_chan)
+            self.jog(True, lr_chan)
         elif event.key() == QtCore.Qt.Key_Down:
             print('Down key pressed')
-            self.jog(False, ud_chan)
+            self.jog(False, lr_chan)
         elif event.key() == QtCore.Qt.Key_Plus:
             print('Plus key pressed')
             self.jog(True, pm_chan)

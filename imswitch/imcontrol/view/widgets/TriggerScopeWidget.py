@@ -261,14 +261,16 @@ class TriggerScopeWidget(Widget):
         self.scanPar['steps' + positionerName].setText(str(steps))
 
     def setTTLStarts(self, deviceName, starts):
-        self.pxParameters['sta' + deviceName].setText(
-            ','.join(map(lambda s: str(round(1000 * s, 3)), starts))
-        )
+        self.pxParameters['sta' + deviceName].setText(str(round(1000 * starts, 3)))
+        # self.pxParameters['sta' + deviceName].setText(
+        #     ','.join(map(lambda s: str(round(1000 * s, 3)), starts))
+        # )
 
     def setTTLEnds(self, deviceName, ends):
-        self.pxParameters['end' + deviceName].setText(
-            ','.join(map(lambda e: str(round(1000 * e, 3)), ends))
-        )
+        self.pxParameters['end' + deviceName].setText(str(round(1000 * ends, 3)))
+        # self.pxParameters['end' + deviceName].setText(
+        #     ','.join(map(lambda e: str(round(1000 * e, 3)), ends))
+        # )
 
     def unsetTTL(self, deviceName):
         self.pxParameters['sta' + deviceName].setText('')
