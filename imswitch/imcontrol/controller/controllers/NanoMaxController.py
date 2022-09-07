@@ -36,8 +36,8 @@ REV_PER_MM = 2
 
 
 move_step_mm = 1
-lr_chan = 0
-ud_chan = 1
+lr_chan = 1
+ud_chan = 0
 pm_chan = 2
 class NanoMaxControl(QtWidgets.QWidget):
 
@@ -49,28 +49,42 @@ class NanoMaxControl(QtWidgets.QWidget):
 
         self.initialZPos_mm = 2
         self.getPosUpdateInterv_ms = 500
+
+        self.initVelUD, self.initVelLR, self.initVelPM = 10, 10, 10
+
+        print('Homing devices')
+
+        self.timer = QtCore.QTimer()
+        self.timer.timeout.connect(self.initialize)
+        self.timer.start(15000)
+
         """GUI elements"""
 
-        self.jogStepLabel = QtWidgets.QLabel('Set jog step size [µm]')
-        self.jogStepEdit = QtWidgets.QDoubleSpinBox()
-        self.jogStepEdit.setMaximum(1000)
-        self.jogStepEdit.setMinimum(0)
-        self.jogStepEdit.setValue(5)
-        self.jogStepEdit.editingFinished.connect(self.setJogPars)
+        self.XYVelLabel = QtWidgets.QLabel('X/Y velocity [um/s]')
+        self.XYVelEdit = QtWidgets.QDoubleSpinBox()
+        self.XYVelEdit.setMaximum(1000)
+        self.XYVelEdit.setMinimum(0)
+        self.XYVelEdit.setValue(10)
+        self.XYVelEdit.editingFinished.connect(self.setXYVelocity)
 
-        self.jogAccLabel = QtWidgets.QLabel('Set jog acceleration [mm/s^2]')
-        self.jogAccEdit = QtWidgets.QDoubleSpinBox()
-        self.jogAccEdit.setMaximum(10)
-        self.jogAccEdit.setMinimum(0)
-        self.jogAccEdit.setValue(2)
-        self.jogAccEdit.editingFinished.connect(self.setJogPars)
+        self.ZVelLabel = QtWidgets.QLabel('Z velocity [um/s]')
+        self.ZVelEdit = QtWidgets.QDoubleSpinBox()
+        self.ZVelEdit.setMaximum(1000)
+        self.ZVelEdit.setMinimum(0)
+        self.ZVelEdit.setValue(10)
+        self.ZVelEdit.editingFinished.connect(self.setZVelocity)
 
-        self.jogMaxVLabel = QtWidgets.QLabel('Set jog max velocity [mm/s]')
-        self.jogMaxVEdit = QtWidgets.QDoubleSpinBox()
-        self.jogMaxVEdit.setMaximum(100)
-        self.jogMaxVEdit.setMinimum(0)
-        self.jogMaxVEdit.setValue(10)
-        self.jogMaxVEdit.editingFinished.connect(self.setJogPars)
+        self.setPosLabel = QtWidgets.QLabel('Set absolute position [um]')
+
+        self.setXLabel = QtWidgets.QLabel('X')
+        self.setXEdit = QtWidgets.QDoubleSpinBox()
+        self.setYLabel = QtWidgets.QLabel('Y')
+        self.setYEdit = QtWidgets.QDoubleSpinBox()
+        self.setZLabel = QtWidgets.QLabel('Z')
+        self.setZEdit = QtWidgets.QDoubleSpinBox()
+
+        self.moveToBtn = QtWidgets.QPushButton('Move to pos')
+        self.moveToBtn.clicked.connect(self.moveTo)
 
         self.pos0Label = QtWidgets.QLabel('X position [µm]')
         self.pos0EditLabel = QtWidgets.QLabel()
@@ -83,28 +97,26 @@ class NanoMaxControl(QtWidgets.QWidget):
         grid = QtWidgets.QGridLayout()
         self.setLayout(grid)
 
-        grid.addWidget(self.jogStepLabel, 0 ,0, 1, 1)
-        grid.addWidget(self.jogStepEdit, 0, 1, 1, 1)
-        grid.addWidget(self.jogAccLabel, 1, 0, 1, 1)
-        grid.addWidget(self.jogAccEdit, 1, 1, 1, 1)
-        grid.addWidget(self.jogMaxVLabel, 2, 0, 1, 1)
-        grid.addWidget(self.jogMaxVEdit, 2, 1, 1, 1)
-        grid.addWidget(self.pos0Label, 3, 0, 1, 1)
-        grid.addWidget(self.pos0EditLabel, 3, 1, 1, 1)
-        grid.addWidget(self.pos1Label, 4, 0, 1, 1)
-        grid.addWidget(self.pos1EditLabel, 4, 1, 1, 1)
-        grid.addWidget(self.pos2Label, 5, 0, 1, 1)
-        grid.addWidget(self.pos2EditLabel, 5, 1, 1, 1)
-
-
-        print('Homing devices')
-
-        self.timer = QtCore.QTimer()
-        self.timer.timeout.connect(self.setInitialPos)
-        self.timer.start(15000)
+        grid.addWidget(self.XYVelLabel, 0 ,0, 1, 1)
+        grid.addWidget(self.XYVelEdit, 0, 1, 1, 1)
+        grid.addWidget(self.ZVelLabel, 1, 0, 1, 1)
+        grid.addWidget(self.ZVelEdit, 1, 1, 1, 1)
+        grid.addWidget(self.setPosLabel, 2, 0, 1, 2)
+        grid.addWidget(self.setXLabel, 3, 0, 1, 1)
+        grid.addWidget(self.setXEdit, 3, 1, 1, 1)
+        grid.addWidget(self.setYLabel, 4, 0, 1, 1)
+        grid.addWidget(self.setYEdit, 4, 1, 1, 1)
+        grid.addWidget(self.setZLabel, 5, 0, 1, 1)
+        grid.addWidget(self.setZEdit, 5, 1, 1, 1)
+        grid.addWidget(self.moveToBtn, 6, 0, 1, 2)
+        grid.addWidget(self.pos0Label, 7, 0, 1, 1)
+        grid.addWidget(self.pos0EditLabel, 7, 1, 1, 1)
+        grid.addWidget(self.pos1Label, 8, 0, 1, 1)
+        grid.addWidget(self.pos1EditLabel, 8, 1, 1, 1)
+        grid.addWidget(self.pos2Label, 9, 0, 1, 1)
+        grid.addWidget(self.pos2EditLabel, 9, 1, 1, 1)
 
         self.setFocusPolicy(QtCore.Qt.StrongFocus)
-        self.setJogPars()
 
     def to_enc_steps(self, mm):
         steps = mm * REV_PER_MM * STEPS_PER_REV
@@ -114,12 +126,42 @@ class NanoMaxControl(QtWidgets.QWidget):
         mm = steps / (REV_PER_MM * STEPS_PER_REV)
         return mm
 
-    def setInitialPos(self):
+    def initialize(self):
         print('Setting initial position')
+        self.dev.set_velocity_params(acceleration=4506, max_velocity=21987328 * 5, bay=0, channel=0)
+        self.dev.set_velocity_params(acceleration=4506, max_velocity=21987328 * 5, bay=1, channel=0)
+        self.dev.set_velocity_params(acceleration=4506, max_velocity=21987328 * 5, bay=2, channel=0)
         self.move_relative_mm(self.initialZPos_mm, 2)
-        self.timer.timeout.disconnect(self.setInitialPos)
+        self.timer.timeout.disconnect(self.initialize)
+        self.timer.timeout.connect(self.setInitialVelocity)
+        self.timer.start(1)
+
+    def setInitialVelocity(self):
+        print('Setting initial velocity')
+        self.dev.set_velocity_params(acceleration=4506, max_velocity=int((self.initVelUD * 21987328) / 1000), bay=0, channel=0)
+        self.dev.set_velocity_params(acceleration=4506, max_velocity=int((self.initVelLR * 21987328) / 1000), bay=1, channel=0)
+        self.dev.set_velocity_params(acceleration=4506, max_velocity=int((self.initVelPM * 21987328) / 1000), bay=2, channel=0)
+        self.timer.timeout.disconnect(self.setInitialVelocity)
         self.timer.timeout.connect(self.getPosition)
         self.timer.start(self.getPosUpdateInterv_ms)
+
+    def setVelocity(self, um_per_s, axis):
+        print('Setting velocity with args ', um_per_s, axis)
+        self.dev.set_velocity_params(acceleration=4506, max_velocity=int((um_per_s * 21987328) / 1000), bay=axis, channel=0)
+
+    def setXYVelocity(self):
+        um_per_s = self.XYVelEdit.value()
+
+        self.setVelocity(um_per_s, 0)
+        self.setVelocity(um_per_s, 1)
+        print('Set XY velocity with', um_per_s)
+
+    def setZVelocity(self):
+        um_per_s = self.ZVelEdit.value()
+        self.setVelocity(um_per_s, 2)
+
+    def moveTo(self):
+        pass
 
     def getPosition(self):
         x, y, z = self.to_mm(self.dev.status_[0][0]['position']), \
@@ -150,29 +192,50 @@ class NanoMaxControl(QtWidgets.QWidget):
         steps = self.to_enc_steps(distance_mm)
         self.dev.move_relative(steps, now=True, bay=axis, channel=0)
 
+    def move_constant(self, direction, axis):
+        self.dev.move_velocity(direction=direction, bay=axis, channel=0)
+
     def move_absolute_mm(self, position_mm, axis):
         pos = self.to_enc_steps(position_mm)
         self.dev.move_absolute(pos, now=True, bay=axis, channel=0)
 
+    def stop(self, axis):
+        self.dev.stop(bay=axis)
+
+
     def keyPressEvent(self, event):
-        if event.key() == QtCore.Qt.Key_Right:
-            print('Right key pressed')
-            self.jog(False, ud_chan)
-        elif event.key() == QtCore.Qt.Key_Left:
-            print('Left key pressed')
-            self.jog(True, ud_chan)
-        elif event.key() == QtCore.Qt.Key_Up:
-            print('Up key pressed')
-            self.jog(True, lr_chan)
-        elif event.key() == QtCore.Qt.Key_Down:
-            print('Down key pressed')
-            self.jog(False, lr_chan)
-        elif event.key() == QtCore.Qt.Key_Plus:
-            print('Plus key pressed')
-            self.jog(True, pm_chan)
-        elif event.key() == QtCore.Qt.Key_Minus:
-            print('Minus key pressed')
-            self.jog(False, pm_chan)
+        if not event.isAutoRepeat():
+            if event.key() == QtCore.Qt.Key_Right:
+                print('Right key pressed')
+                self.move_constant(False, lr_chan)
+            elif event.key() == QtCore.Qt.Key_Left:
+                print('Left key pressed')
+                self.move_constant(True, lr_chan)
+            elif event.key() == QtCore.Qt.Key_Up:
+                print('Up key pressed')
+                self.move_constant(True, ud_chan)
+            elif event.key() == QtCore.Qt.Key_Down:
+                print('Down key pressed')
+                self.move_constant(False, ud_chan)
+            elif event.key() == QtCore.Qt.Key_Plus:
+                print('Plus key pressed')
+                self.move_constant(True, pm_chan)
+            elif event.key() == QtCore.Qt.Key_Minus:
+                print('Minus key pressed')
+                self.move_constant(False, pm_chan)
+
+
+    def keyReleaseEvent(self, event):
+        if not event.isAutoRepeat():
+            if (event.key() == QtCore.Qt.Key_Right or event.key() == QtCore.Qt.Key_Left):
+                print('Right/Left key released')
+                self.stop(lr_chan)
+            if (event.key() == QtCore.Qt.Key_Up or event.key() == QtCore.Qt.Key_Down):
+                print('Up/Down key released')
+                self.stop(ud_chan)
+            if (event.key() == QtCore.Qt.Key_Plus or event.key() == QtCore.Qt.Key_Minus):
+                print('Up/Down key released')
+                self.stop(pm_chan)
 
     # def keyPressEvent(self, event):
     #     if event.key() == QtCore.Qt.Key_Right:
