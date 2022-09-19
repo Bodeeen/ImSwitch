@@ -5,7 +5,7 @@ from imswitch.imcontrol.view import guitools as guitools
 from .basewidgets import Widget
 
 
-class TriggerScopeWidget(Widget):
+class TriggerScopeRasterWidget(Widget):
     """ Widget containing scanner interface and beadscan reconstruction.
             This class uses the classes GraphFrame, MultipleScanWidget and IllumImageWidget"""
 
@@ -15,8 +15,6 @@ class TriggerScopeWidget(Widget):
     sigSeqTimeParChanged = QtCore.Signal()
     sigStageParChanged = QtCore.Signal()
     sigSignalParChanged = QtCore.Signal()
-    sigPosIncrementChanged = QtCore.Signal(str)
-    sigPosParameterChanged = QtCore.Signal(str, float)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -31,7 +29,7 @@ class TriggerScopeWidget(Widget):
         self.digModWarning.setInformativeText(
             "You need to be in digital laser modulation and external "
             "frame-trigger acquisition mode")
-        self.scannerLabel = QtWidgets.QLabel('Scanner')
+        self.scannerLabel = QtWidgets.QLabel('Raster scanner')
         self.scannerLabel.setStyleSheet('font-size: 14pt; font-weight: bold')
 
         self.saveScanBtn = guitools.BetterPushButton('Save Scan')
@@ -41,7 +39,6 @@ class TriggerScopeWidget(Widget):
 
         self.scanDims = []
 
-        self.positionPars = {}
         self.scanPar = {'seqTime': self.seqTimePar}
 
         self.pxParameters = {}

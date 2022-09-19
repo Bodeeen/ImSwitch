@@ -1,7 +1,7 @@
 import numpy as np
 
 from imswitch.imcommon.model import initLogger
-from .pyicic import IC_ImagingControl
+from imswitch.imcontrol.model.interfaces.pyicic import IC_ImagingControl
 
 
 class CameraTIS:
@@ -16,15 +16,11 @@ class CameraTIS:
         self.cam = ic_ic.get_device(cam_names[cameraNo])
 
         self.cam.open()
-
-        self.shape = (0, 0)
-        self.cam.colorenable = 0
-
+        self.cam.set_video_format('Y800 (2448x2048)')  # set video format
         self.cam.enable_continuous_mode(True)  # image in continuous mode
-        self.cam.enable_trigger(False)  # camera will wait for trigger
-
+        self.shape = (0, 0)
         self.roi_filter = self.cam.create_frame_filter('ROI')
-        self.cam.add_frame_filter_to_device(self.roi_filter)
+        # self.cam.add_frame_filter_to_device(self.roi_filter)
 
     def start_live(self):
         self.cam.start_live()  # start imaging
@@ -40,12 +36,14 @@ class CameraTIS:
 
     def grabFrame(self):
         # self.cam.wait_til_frame_ready(20)  # wait for frame ready
-        frame, width, height, depth = self.cam.get_image_data()
-        frame = np.array(frame, dtype='float64')
+        data, width, height, depth = self.cam.get_image_data()
+        f_array = np.ndarray(buffer=data,
+                             dtype=np.uint8,
+                             shape=(depth * height * width))
+        frame = np.reshape(f_array[::depth], [height, width])
         # Check if below is giving the right dimensions out
         # TODO: do this smarter, as I can just take every 3rd value instead of creating a reshaped
         #       3D array and taking the first plane of that
-        frame = np.reshape(frame, (height, width, depth))[:, :, 0]
         return frame
 
     def setROI(self, hpos, vpos, hsize, vsize):

@@ -65,6 +65,7 @@ class MasterController:
 
     def closeEvent(self):
         self.recordingManager.endRecording(emitSignal=False, wait=True)
+        self.triggerScopeManager.closeMonitor()
 
         for attrName in dir(self):
             attr = getattr(self, attrName)

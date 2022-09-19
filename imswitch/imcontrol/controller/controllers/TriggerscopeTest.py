@@ -61,7 +61,7 @@ def writetgs(tgin):
     while l != '':
         l = tgS.readline().decode()
         bufa += l
-        time.sleep(0.01)
+        time.sleep(0.001)
     return bufa
 
 
@@ -97,6 +97,30 @@ def setPixelCyclePars():
     setParameter('p3Line', 2)
     setParameter('p3StartUs', 3500)
     setParameter('p3EndUs', 5000)
+
+def setpLSRParameters():
+    setParameter('onLaserTTLChan', 0)
+    setParameter('offLaserTTLChan', 2)
+    setParameter('roLaserTTLChan', 5)
+    setParameter('roScanDACChan', 0)
+    setParameter('cycleScanDACChan', 2)
+
+    setParameter('onPulseTimeUs', 1000)
+    setParameter('delayAfterOnUs', 500)
+    setParameter('offPulseTimeUs', 1000)
+    setParameter('delayAfterOffUs', 400)
+    setParameter('delayAfterDACStepUs', 2000)
+    setParameter('roPulseTimeUs', 1500)
+    setParameter('roRestingV', 0)
+    setParameter('roStartV', -0.5)
+    setParameter('roStepSizeV', 0.1)
+    setParameter('roSteps', 20)
+    setParameter('cycleStartV', 0)
+    setParameter('cycleStepSizeV', 0.2)
+    setParameter('cycleSteps', 5)
+
+def runpLSRScan():
+    print(writetgs('pLS-RESOLFT_SCAN\n'))
 
 def runRasterScan():
     print(writetgs('RASTER_SCAN\n'))

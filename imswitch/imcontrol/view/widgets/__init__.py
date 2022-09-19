@@ -16,4 +16,6 @@ from .ULensesWidget import ULensesWidget
 from .ViewWidget import ViewWidget
 from .basewidgets import WidgetFactory
 from .WellPlateWidget import WellPlateWidget
-from .TriggerScopeWidget import TriggerScopeWidget
+from .TriggerScopeRasterWidget import TriggerScopeRasterWidget
+from .TriggerScopePLSRWidget import TriggerScopePLSRWidget
+from .BSC203Widget import BSC203Widget

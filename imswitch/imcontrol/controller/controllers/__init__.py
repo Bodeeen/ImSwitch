@@ -15,4 +15,6 @@ from .SettingsController import SettingsController
 from .ULensesController import ULensesController
 from .ViewController import ViewController
 from .WellPlateController import WellPlateController
-from .TriggerScopeController import TriggerScopeController
+from .TriggerScopeRasterController import TriggerScopeRasterController
+from .TriggerScopePLSRController import TriggerScopePLSRController
+from .BSC203Controller import BSC203Controller

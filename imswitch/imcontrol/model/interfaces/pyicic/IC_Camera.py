@@ -3,6 +3,8 @@
 
 from __future__ import absolute_import
 from __future__ import division
+
+import ctypes
 from builtins import object
 from ctypes import *
 import time
@@ -46,6 +48,8 @@ class IC_Camera:
         self._callback_registered = False
         self._frame = {'num'    :   -1,
                        'ready'  :   False}
+        pointer_array_size = 20000
+        self._data_ptrs = pointer_array_size*[None]
 
     def __getattr__(self, attr):
     
@@ -487,6 +491,7 @@ class IC_Camera:
         def cb_func(handle_ptr, p_data, frame_num, data):
             self._frame['ready'] = True
             self._frame['num'] = frame_num
+            self._data_ptrs[frame_num - 1] = p_data
 
         return C_FRAME_READY_CALLBACK(cb_func)
     
@@ -523,11 +528,11 @@ class IC_Camera:
         :returns: int -- frame number that was announced as ready.
         """
         if timeout:        
-            start = time.clock()
-            elapsed = (time.clock() - start) * 1000
+            start = time.time()
+            elapsed = (time.time() - start) * 1000
             while not self._frame['ready'] and elapsed < timeout:
                 time.sleep(0.001)
-                elapsed = (time.clock() - start) * 1000
+                elapsed = (time.time() - start) * 1000
         else:
             while not self._frame['ready']:
                 time.sleep(0.001)

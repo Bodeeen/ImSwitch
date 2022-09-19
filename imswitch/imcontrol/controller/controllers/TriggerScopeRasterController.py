@@ -9,8 +9,8 @@ from imswitch.imcommon.model import APIExport, dirtools
 from imswitch.imcontrol.view import guitools
 from imswitch.imcommon.view.guitools import colorutils
 
-class TriggerScopeController(ImConWidgetController):
-    """ Linked to TriggerScopeWidget."""
+class TriggerScopeRasterController(ImConWidgetController):
+    """ Linked to TriggerScopeRasterWidget."""
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -68,7 +68,6 @@ class TriggerScopeController(ImConWidgetController):
         self._widget.sigStageParChanged.connect(self.updateScanStageAttrs)
         self._widget.sigSignalParChanged.connect(self.plotSignalGraph)
         self._widget.sigSignalParChanged.connect(self.updateScanTTLAttrs)
-        self._widget.sigPosParameterChanged.connect(self.changePosition)
 
     def getDimsScan(self):
         # TODO: Make sure this works as intended

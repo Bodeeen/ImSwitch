@@ -1,4 +1,5 @@
 from imswitch.imcommon.model import APIExport
+from imswitch.imcommon.model import APIExport
 from ..basecontrollers import ImConWidgetController
 
 

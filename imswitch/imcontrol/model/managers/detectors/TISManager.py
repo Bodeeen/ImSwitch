@@ -68,6 +68,7 @@ class TISManager(DetectorManager):
         if name not in self._DetectorManager__parameters:
             raise AttributeError(f'Non-existent parameter "{name}" specified')
 
+        self.__logger.debug('Setting parameter: ', name, 'with value: ', value)
         value = self._camera.setPropertyValue(name, value)
         return value
 

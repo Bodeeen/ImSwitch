@@ -29,6 +29,7 @@ class TriggerScopeManager(SignalInterface):
         self._thread.started.connect(self._serialMonitor.run)
         self._thread.finished.connect(self._serialMonitor.stop)
         self._thread.start()
+        self._monitoring = True
 
         self._deviceInfo = {}
         self.__logger.debug('All devices: ' + str(setupInfo.getAllDevices()))
@@ -51,6 +52,8 @@ class TriggerScopeManager(SignalInterface):
                     else:
                         self._deviceInfo.update({targetName: {'TTLLine': lineNr}})
 
+        self.setParSleepTime = 0.05
+
         #Connect signals from serialMonitor
         self._serialMonitor.sigScanDone.connect(self.sigScanDone)
         self._serialMonitor.sigUnknownMessage.connect(self.unknownMsg)
@@ -67,6 +70,7 @@ class TriggerScopeManager(SignalInterface):
     def setParameter(self, parameterName, parameterValue):
         msg = 'PARAMETER,' + parameterName + ',' + str(parameterValue) + '\n'
         self.send(msg)
+        time.sleep(self.setParSleepTime)
 
     def send(self, command):
         self._rs232manager.write(command)
@@ -76,14 +80,49 @@ class TriggerScopeManager(SignalInterface):
 
         if type == 'rasterScan':
             self.runRasterScan(parameterDict)
+        elif type == 'pLS-RESOLFTScan':
+            self.runpLSRESOLFTScan(parameterDict)
         else:
             self.__logger.info('Unknown scan type')
 
+    def runpLSRESOLFTScan(self, pLSRESOLFTScanParameters):
+        deviceParameters = pLSRESOLFTScanParameters['deviceParameters']
+
+        onLaserTTLLine = self._deviceInfo[deviceParameters['onLaser']]['TTLLine']
+        offLaserTTLLine = self._deviceInfo[deviceParameters['offLaser']]['TTLLine']
+        roLaserTTLLine = self._deviceInfo[deviceParameters['roLaser']]['TTLLine']
+        roScanDACChan = self._deviceInfo[deviceParameters['roScanDevice']]['DACChannel']
+        cycleScanDACChan = self._deviceInfo[deviceParameters['cycleScanDevice']]['DACChannel']
+
+        self.setParameter('onLaserTTLChan', onLaserTTLLine)
+        self.setParameter('offLaserTTLChan', offLaserTTLLine)
+        self.setParameter('roLaserTTLChan', roLaserTTLLine)
+        self.setParameter('roScanDACChan', roScanDACChan)
+        self.setParameter('cycleScanDACChan', cycleScanDACChan)
+
+        scanParameters = pLSRESOLFTScanParameters['scanParameters']
+
+        self.setParameter('onPulseTimeUs', scanParameters['onPulseTimeUs'])
+        self.setParameter('delayAfterOnUs', scanParameters['delayAfterOnUs'])
+        self.setParameter('offPulseTimeUs', scanParameters['offPulseTimeUs'])
+        self.setParameter('delayAfterOffUs', scanParameters['delayAfterOffUs'])
+        self.setParameter('delayAfterDACStepUs', scanParameters['delayAfterDACStepUs'])
+        self.setParameter('roPulseTimeUs', scanParameters['roPulseTimeUs'])
+        self.setParameter('roRestingV', scanParameters['roRestingV'])
+        self.setParameter('roStartV', scanParameters['roStartV'])
+        self.setParameter('roStepSizeV', scanParameters['roStepSizeV'])
+        self.setParameter('roSteps', scanParameters['roSteps'])
+        self.setParameter('cycleStartV', scanParameters['cycleStartV'])
+        self.setParameter('cycleStepSizeV', scanParameters['cycleStepSizeV'])
+        self.setParameter('cycleSteps', scanParameters['cycleSteps'])
+
+        self.__logger.debug('Parameters set')
+        self.send('pLS-RESOLFT_SCAN')
+        self.sigScanStarted.emit()
+
     def runRasterScan(self, rasterScanParameters):
-        sleepTime = 0.05
         seqTime = rasterScanParameters['Digital']['sequence_time']
         self.setParameter('sequenceTimeUs', int(seqTime * 1e6))
-        time.sleep(sleepTime)
 
         startTimes = rasterScanParameters['Digital']['TTL_start']
         if len(startTimes) > 0:
@@ -95,63 +134,43 @@ class TriggerScopeManager(SignalInterface):
             firstPulseLine = self._deviceInfo[firstPulseTarget]['TTLLine']
 
             self.setParameter('p1Line', int(firstPulseLine))
-            time.sleep(sleepTime)
             self.setParameter('p1StartUs', int(firstStart * 1e6))
-            time.sleep(sleepTime)
             self.setParameter('p1EndUs', int(endOfPulse * 1e6))
-            time.sleep(sleepTime)
 
         self.__logger.debug('Setting parameters')
         try:
             chan = self._deviceInfo[rasterScanParameters['Analog']['targets'][0]]['DACChannel']
             self.setParameter('dimOneChan', chan)
-            time.sleep(sleepTime)
             self.setParameter('dimOneStartV', rasterScanParameters['Analog']['startPos'][0])
-            time.sleep(sleepTime)
             self.setParameter('dimOneLenV', rasterScanParameters['Analog']['lengths'][0])
-            time.sleep(sleepTime)
             self.setParameter('dimOneStepSizeV', rasterScanParameters['Analog']['stepSizes'][0])
-            time.sleep(sleepTime)
         except IndexError:
             pass
         try:
             chan = self._deviceInfo[rasterScanParameters['Analog']['targets'][1]]['DACChannel']
             self.setParameter('dimTwoChan', chan)
-            time.sleep(sleepTime)
             self.setParameter('dimTwoStartV', rasterScanParameters['Analog']['startPos'][1])
-            time.sleep(sleepTime)
             self.setParameter('dimTwoLenV', rasterScanParameters['Analog']['lengths'][1])
-            time.sleep(sleepTime)
             self.setParameter('dimTwoStepSizeV', rasterScanParameters['Analog']['stepSizes'][1])
-            time.sleep(sleepTime)
         except IndexError:
             pass
         try:
             chan = self._deviceInfo[rasterScanParameters['Analog']['targets'][2]]['DACChannel']
             self.setParameter('dimThreeChan', chan)
-            time.sleep(sleepTime)
             self.setParameter('dimThreeStartV', rasterScanParameters['Analog']['startPos'][2])
-            time.sleep(sleepTime)
             self.setParameter('dimThreeLenV', rasterScanParameters['Analog']['lengths'][2])
-            time.sleep(sleepTime)
             self.setParameter('dimThreeStepSizeV', rasterScanParameters['Analog']['stepSizes'][2])
-            time.sleep(sleepTime)
         except IndexError:
             pass
         try:
             chan = self._deviceInfo[rasterScanParameters['Analog']['targets'][3]]['DACChannel']
             self.setParameter('dimFourChan', chan)
-            time.sleep(sleepTime)
             self.setParameter('dimFourStartV', rasterScanParameters['Analog']['startPos'][3])
-            time.sleep(sleepTime)
             self.setParameter('dimFourLenV', rasterScanParameters['Analog']['lengths'][3])
-            time.sleep(sleepTime)
             self.setParameter('dimFourStepSizeV', rasterScanParameters['Analog']['stepSizes'][3])
-            time.sleep(sleepTime)
         except IndexError:
             pass
         self.setParameter('angleRad', np.deg2rad(0))
-        time.sleep(sleepTime)
         self.__logger.debug('Parameters set')
 
         self.send('RASTER_SCAN')
@@ -175,6 +194,11 @@ class TriggerScopeManager(SignalInterface):
             self.send(msg)
         else:
             self.__logger.warning('Trying to set Triggerscope voltage outside allowed range')
+
+    def closeMonitor(self):
+        if self._monitoring:
+            self._thread.quit()
+            self._monitoring = False
 
 
 
