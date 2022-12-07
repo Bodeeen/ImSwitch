@@ -53,25 +53,34 @@ class TriggerScopePLSRWidget(Widget):
         self.scrollContainer.addWidget(self.scrollArea)
         self.gridContainer.installEventFilter(self)
 
+        timeLapsePointsLabel = QtWidgets.QLabel('Time lapse timepoints')
+        self.timeLapsePointsEdit = guitools.BetterSpinBox(allowScrollChanges=False)
+        timeLapseDelayLabel = QtWidgets.QLabel('Time lapse delay (sec)')
+        self.timeLapseDelayEdit = guitools.BetterDoubleSpinBox(allowScrollChanges=False)
+        self.timeLapseDelayEdit.setMaximum(1000)
+
         onLaserLabel = QtWidgets.QLabel('On laser')
-        self.onLaserEdit = QtWidgets.QComboBox()
+        self.onLaserEdit = guitools.BetterComboBox(allowScrollChanges=False)
         offLaserLabel = QtWidgets.QLabel('Off laser')
-        self.offLaserEdit = QtWidgets.QComboBox()
+        self.offLaserEdit = guitools.BetterComboBox(allowScrollChanges=False)
         roLaserLabel = QtWidgets.QLabel('Read-out laser')
-        self.roLaserEdit = QtWidgets.QComboBox()
+        self.roLaserEdit = guitools.BetterComboBox(allowScrollChanges=False)
 
         roScanDeviceLabel = QtWidgets.QLabel('RO scan device')
-        self.roScanDeviceEdit = QtWidgets.QComboBox()
+        self.roScanDeviceEdit = guitools.BetterComboBox(allowScrollChanges=False)
         cycleScanDeviceLabel = QtWidgets.QLabel('Cycle scan device')
-        self.cycleScanDeviceEdit = QtWidgets.QComboBox()
+        self.cycleScanDeviceEdit = guitools.BetterComboBox(allowScrollChanges=False)
 
-
+        delayBeforeOnLabel = QtWidgets.QLabel('Delay before on-pulse (in consecutive cycles) (ms)')
+        self.delayBeforeOnEdit = guitools.BetterDoubleSpinBox(allowScrollChanges=False)
         onTimeLabel = QtWidgets.QLabel('On-pulse time (ms)')
         self.onTimeEdit = guitools.BetterDoubleSpinBox(allowScrollChanges=False)
+        self.onTimeEdit.setMaximum(1000)
         delayAfterOnLabel = QtWidgets.QLabel('Delay after on-pulse (ms)')
         self.delayAfterOnEdit = guitools.BetterDoubleSpinBox(allowScrollChanges=False)
         offTimeLabel = QtWidgets.QLabel('Off-pulse time (ms)')
         self.offTimeEdit = guitools.BetterDoubleSpinBox(allowScrollChanges=False)
+        self.offTimeEdit.setMaximum(1000)
         delayAfterOffLabel = QtWidgets.QLabel('Delay after off-pulse (ms)')
         self.delayAfterOffEdit = guitools.BetterDoubleSpinBox(allowScrollChanges=False)
         delayAfterDACStepLabel = QtWidgets.QLabel('Delay after DAC step (ms)')
@@ -93,6 +102,7 @@ class TriggerScopePLSRWidget(Widget):
         self.roStepSizeUmEdit.setMaximum(10)
         roStepsLabel = QtWidgets.QLabel('RO scan steps')
         self.roStepsEdit = guitools.BetterSpinBox(allowScrollChanges=False)
+        self.roStepsEdit.setMaximum(10000)
         cycleStartPosUmLabel = QtWidgets.QLabel('Cycle scan start (um)')
         self.cycleStartPosUmEdit = guitools.BetterDoubleSpinBox(allowScrollChanges=False)
         self.cycleStartPosUmEdit.setMinimum(-200)
@@ -101,8 +111,10 @@ class TriggerScopePLSRWidget(Widget):
         self.cycleStepSizeUmEdit = guitools.BetterDoubleSpinBox(allowScrollChanges=False)
         self.cycleStepSizeUmEdit.setMinimum(-10)
         self.cycleStepSizeUmEdit.setMaximum(10)
+        self.cycleStepSizeUmEdit.setDecimals(3)
         cycleStepsLabel = QtWidgets.QLabel('Cycle scan steps')
         self.cycleStepsEdit = guitools.BetterSpinBox(allowScrollChanges=False)
+        self.cycleStepsEdit.setMaximum(1000)
 
         currentRow = 0
 
@@ -128,37 +140,53 @@ class TriggerScopePLSRWidget(Widget):
         )
         self.grid.addWidget(self.scanButton, currentRow, 3)
         currentRow += 1
-
-        self.grid.addWidget(onTimeLabel, currentRow, 0)
-        self.grid.addWidget(self.onTimeEdit, currentRow, 1)
+        self.grid.addItem(
+            QtWidgets.QSpacerItem(40, 20,
+                                  QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding),
+            currentRow, 0, 1, 4)
+        currentRow += 1
+        self.grid.addWidget(timeLapsePointsLabel, currentRow, 0)
+        self.grid.addWidget(self.timeLapsePointsEdit, currentRow, 1)
+        self.grid.addWidget(timeLapseDelayLabel, currentRow, 2)
+        self.grid.addWidget(self.timeLapseDelayEdit, currentRow, 3)
+        currentRow += 1
+        self.grid.addItem(
+            QtWidgets.QSpacerItem(40, 20,
+                                  QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding),
+            currentRow, 0, 1, 4)
+        currentRow += 1
+        self.grid.addWidget(delayBeforeOnLabel, currentRow, 0)
+        self.grid.addWidget(self.delayBeforeOnEdit, currentRow, 1)
         self.grid.addWidget(roRestingPosUmLabel, currentRow, 2)
         self.grid.addWidget(self.roRestingPosUmEdit, currentRow, 3)
         currentRow += 1
-        self.grid.addWidget(delayAfterOnLabel, currentRow, 0)
-        self.grid.addWidget(self.delayAfterOnEdit, currentRow, 1)
+        self.grid.addWidget(onTimeLabel, currentRow, 0)
+        self.grid.addWidget(self.onTimeEdit, currentRow, 1)
         self.grid.addWidget(roStartPosUmLabel, currentRow, 2)
         self.grid.addWidget(self.roStartPosUmEdit, currentRow, 3)
         currentRow += 1
-        self.grid.addWidget(offTimeLabel, currentRow, 0)
-        self.grid.addWidget(self.offTimeEdit, currentRow, 1)
+        self.grid.addWidget(delayAfterOnLabel, currentRow, 0)
+        self.grid.addWidget(self.delayAfterOnEdit, currentRow, 1)
         self.grid.addWidget(roStepSizeUmLabel, currentRow, 2)
         self.grid.addWidget(self.roStepSizeUmEdit, currentRow, 3)
         currentRow += 1
-        self.grid.addWidget(delayAfterOffLabel, currentRow, 0)
-        self.grid.addWidget(self.delayAfterOffEdit, currentRow, 1)
+        self.grid.addWidget(offTimeLabel, currentRow, 0)
+        self.grid.addWidget(self.offTimeEdit, currentRow, 1)
         self.grid.addWidget(roStepsLabel, currentRow, 2)
         self.grid.addWidget(self.roStepsEdit, currentRow, 3)
         currentRow += 1
-        self.grid.addWidget(delayAfterDACStepLabel, currentRow, 0)
-        self.grid.addWidget(self.delayAfterDACStepEdit, currentRow, 1)
+        self.grid.addWidget(delayAfterOffLabel, currentRow, 0)
+        self.grid.addWidget(self.delayAfterOffEdit, currentRow, 1)
         self.grid.addWidget(cycleStartPosUmLabel, currentRow, 2)
         self.grid.addWidget(self.cycleStartPosUmEdit, currentRow, 3)
         currentRow += 1
-        self.grid.addWidget(roTimeLabel, currentRow, 0)
-        self.grid.addWidget(self.roTimeEdit, currentRow, 1)
+        self.grid.addWidget(delayAfterDACStepLabel, currentRow, 0)
+        self.grid.addWidget(self.delayAfterDACStepEdit, currentRow, 1)
         self.grid.addWidget(cycleStepSizeUmLabel, currentRow, 2)
         self.grid.addWidget(self.cycleStepSizeUmEdit, currentRow, 3)
         currentRow += 1
+        self.grid.addWidget(roTimeLabel, currentRow, 0)
+        self.grid.addWidget(self.roTimeEdit, currentRow, 1)
         self.grid.addWidget(cycleStepsLabel, currentRow, 2)
         self.grid.addWidget(self.cycleStepsEdit, currentRow, 3)
         currentRow += 1
@@ -185,6 +213,24 @@ class TriggerScopePLSRWidget(Widget):
         self.loadScanBtn.clicked.connect(self.sigLoadScanClicked)
         self.scanButton.clicked.connect(self.sigRunScanClicked)
 
+
+    def getTimeLapsePoints(self):
+        return self.timeLapsePointsEdit.value()
+
+    def setTimeLapsePoints(self, value):
+        self.timeLapsePointsEdit.setValue(value)
+
+    def getTimeLapseDelayS(self):
+        return self.timeLapseDelayEdit.value()
+
+    def setTimeLapseDelayS(self, value):
+        self.timeLapseDelayEdit.setValue(value)
+
+    def getDelayBeforeOnTimeMs(self):
+        return self.delayBeforeOnEdit.value()
+
+    def setDelayBeforeOnTimeMs(self, value):
+        self.delayBeforeOnEdit.setValue(value)
 
     def getOnTimeMs(self):
         return self.onTimeEdit.value()

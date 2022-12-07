@@ -114,6 +114,9 @@ class TriggerScopePLSRController(ImConWidgetController):
         self.settingParameters = True
         try:
             #Set scan parameters
+            self._widget.setTimeLapsePoints(self._scanParameterDict['timeLapsePoints'])
+            self._widget.setTimeLapseDelayS(self._scanParameterDict['timeLapseDelayS'])
+            self._widget.setDelayBeforeOnTimeMs(self._scanParameterDict['delayBeforeOnTimeMs'])
             self._widget.setOnTimeMs(self._scanParameterDict['onTimeMs'])
             self._widget.setDelayAfterOnTimeMs(self._scanParameterDict['delayAfterOnTimeMs'])
             self._widget.setOffTimeMs(self._scanParameterDict['offTimeMs'])
@@ -148,6 +151,9 @@ class TriggerScopePLSRController(ImConWidgetController):
         scanParameterDict['onPulseTimeUs'] = int(self._scanParameterDict['onTimeMs'] * 1000)
         scanParameterDict['offPulseTimeUs'] = int(self._scanParameterDict['offTimeMs'] * 1000)
         scanParameterDict['roPulseTimeUs'] = int(self._scanParameterDict['roTimeMs'] * 1000)
+        scanParameterDict['timeLapsePoints'] = int(self._scanParameterDict['timeLapsePoints'])
+        scanParameterDict['timeLapseDelayUs'] = int(self._scanParameterDict['timeLapseDelayS'] * 1000000)
+        scanParameterDict['delayBeforeOnUs'] = int(self._scanParameterDict['delayBeforeOnTimeMs'] * 1000)
         scanParameterDict['delayAfterOnUs'] = int(self._scanParameterDict['delayAfterOnTimeMs'] * 1000)
         scanParameterDict['delayAfterOffUs'] = int(self._scanParameterDict['delayAfterOffTimeMs'] * 1000)
         scanParameterDict['delayAfterDACStepUs'] = int(self._scanParameterDict['delayAfterDACStepMs'] * 1000)
@@ -214,6 +220,9 @@ class TriggerScopePLSRController(ImConWidgetController):
         if self.settingParameters:
             return
         #Get scan parameters
+        self._scanParameterDict['timeLapsePoints'] = self._widget.getTimeLapsePoints()
+        self._scanParameterDict['timeLapseDelayS'] = self._widget.getTimeLapseDelayS()
+        self._scanParameterDict['delayBeforeOnTimeMs'] = self._widget.getDelayBeforeOnTimeMs()
         self._scanParameterDict['onTimeMs'] = self._widget.getOnTimeMs()
         self._scanParameterDict['delayAfterOnTimeMs'] = self._widget.getDelayAfterOnTimeMs()
         self._scanParameterDict['offTimeMs'] = self._widget.getOffTimeMs()

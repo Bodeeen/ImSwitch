@@ -19,3 +19,4 @@ from .WellPlateWidget import WellPlateWidget
 from .TriggerScopeRasterWidget import TriggerScopeRasterWidget
 from .TriggerScopePLSRWidget import TriggerScopePLSRWidget
 from .BSC203Widget import BSC203Widget
+from .SetupStatusWidget import SetupStatusWidget

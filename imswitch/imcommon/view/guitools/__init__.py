@@ -9,3 +9,4 @@ from .stylesheet import getBaseStyleSheet
 from .texttools import ordinalSuffix
 from .BetterSpinBox import BetterSpinBox
 from .BetterDoubleSpinBox import BetterDoubleSpinBox
+from .BetterComboBox import BetterComboBox

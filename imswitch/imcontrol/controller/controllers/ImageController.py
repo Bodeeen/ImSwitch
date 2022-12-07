@@ -26,6 +26,7 @@ class ImageController(LiveUpdatedController):
         self._commChannel.sigAddItemToVb.connect(self.addItemToVb)
         self._commChannel.sigRemoveItemFromVb.connect(self.removeItemFromVb)
         self._commChannel.sigMemorySnapAvailable.connect(self.memorySnapAvailable)
+        self._commChannel.sigSetVisibleLayers.connect(self.setVisibleLayers)
 
     def autoLevels(self, detectorNames=None, im=None):
         """ Set histogram levels automatically with current detector image."""
@@ -95,6 +96,9 @@ class ImageController(LiveUpdatedController):
         if self._shouldResetView:
             self.adjustFrame(image.shape, instantResetView=True)
 
+    def setVisibleLayers(self, names):
+        self._widget.setVisibleLayers(names)
+        self.autoLevels(names)
 
 # Copyright (C) 2020-2021 ImSwitch developers
 # This file is part of ImSwitch.

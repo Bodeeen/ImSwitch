@@ -127,9 +127,9 @@ class TriggerScopeRasterWidget(Widget):
             # Scan params
             sizePar = QtWidgets.QLineEdit('2')
             self.scanPar['size' + positionerName] = sizePar
-            stepSizePar = QtWidgets.QLineEdit('1')
+            stepSizePar = QtWidgets.QLineEdit('0.1')
             self.scanPar['stepSize' + positionerName] = stepSizePar
-            numStepsPar = QtWidgets.QLineEdit('2')
+            numStepsPar = QtWidgets.QLineEdit('20')
             numStepsPar.setEnabled(False)
             self.scanPar['steps' + positionerName] = numStepsPar
             self.grid.addWidget(QtWidgets.QLabel(positionerName), currentRow, 0)

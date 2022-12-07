@@ -30,6 +30,8 @@ class CommunicationChannel(SignalInterface):
 
     sigAddItemToVb = Signal(object)  # (item)
 
+    sigSetVisibleLayers = Signal(tuple)
+
     sigRemoveItemFromVb = Signal(object)  # (item)
 
     sigRecordingStarted = Signal()
@@ -77,8 +79,8 @@ class CommunicationChannel(SignalInterface):
             raise RuntimeError('Required image widget not available')
 
     def getDimsScan(self):
-        if 'TriggerScope' in self.__main.controllers:
-            return self.__main.controllers['TriggerScope'].getDimsScan()
+        if 'TriggerScopeRaster' in self.__main.controllers:
+            return self.__main.controllers['TriggerScopeRaster'].getDimsScan()
         else:
             raise RuntimeError('Required scan widget not available')
 
