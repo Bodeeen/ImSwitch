@@ -2,7 +2,7 @@ import os
 import weakref
 from abc import ABCMeta, abstractmethod
 
-from qtpy import QtCore, QtWidgets
+from qtpy import QtCore, QtGui, QtWidgets
 
 from imswitch.imcommon.view.guitools import naparitools
 
@@ -37,11 +37,15 @@ class WidgetFactory:
 
 class Widget(QtWidgets.QWidget, metaclass=_QObjectABCMeta):
     """ Superclass for all Widgets. All Widgets are subclasses of QWidget. """
+    sigKeyPressed = QtCore.Signal(object)
+    sigKeyReleased = QtCore.Signal(object)
+    sigWheelMoved = QtCore.Signal(object)
 
     @abstractmethod
     def __init__(self, options, *_args, **_kwargs):
         self._options = options
         QtWidgets.QWidget.__init__(self)
+        self.setFocusPolicy(QtCore.Qt.StrongFocus)
 
     def replaceWithError(self, errorText):
         errorLabel = QtWidgets.QLabel(errorText)
@@ -52,6 +56,14 @@ class Widget(QtWidgets.QWidget, metaclass=_QObjectABCMeta):
         self.setLayout(grid)
         grid.addWidget(errorLabel)
 
+    def keyPressEvent(self, event):
+        self.sigKeyPressed.emit(event)
+
+    def keyReleaseEvent(self, event):
+        self.sigKeyReleased.emit(event)
+
+    def wheelEvent(self, event):
+        self.sigWheelMoved.emit(event)
 
 class NapariHybridWidget(Widget, naparitools.NapariBaseWidget, metaclass=_QObjectABCMeta):
     """ Superclass for widgets that can use the functionality of

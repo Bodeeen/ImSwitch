@@ -1,9 +1,11 @@
-from qtpy import QtCore, QtWidgets
+from qtpy import QtGui, QtCore, QtWidgets
 
 
 class PickSetupDialog(QtWidgets.QDialog):
     """ Dialog for picking the setup to use for imcontrol. """
-
+    sigKeyPressed = QtCore.Signal(object)
+    sigKeyReleased = QtCore.Signal(object)
+    sigWheelMoved = QtCore.Signal(object)
     def __init__(self, parent=None, *args, **kwargs):
         super().__init__(parent, QtCore.Qt.WindowSystemMenuHint | QtCore.Qt.WindowTitleHint,
                          *args, **kwargs)

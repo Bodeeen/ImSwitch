@@ -12,6 +12,12 @@ class CommunicationChannel(SignalInterface):
     and Widgets, or between Widgets.
     """
 
+    sigKeyPressed = Signal(object)
+
+    sigKeyReleased = Signal(object)
+
+    sigWheelMoved = Signal(object)
+
     sigUpdateImage = Signal(
         str, np.ndarray, bool, bool
     )  # (detectorName, image, init, isCurrentDetector)

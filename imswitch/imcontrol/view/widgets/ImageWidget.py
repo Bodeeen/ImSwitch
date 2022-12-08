@@ -1,13 +1,13 @@
 import numpy as np
-from qtpy import QtWidgets
+from qtpy import QtWidgets, QtCore
 
 from imswitch.imcommon.model import shortcut
 from imswitch.imcommon.view.guitools import naparitools
+from .basewidgets import Widget
 
 
-class ImageWidget(QtWidgets.QWidget):
+class ImageWidget(Widget):
     """ Widget containing viewbox that displays the new detector frames. """
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -111,7 +111,6 @@ class ImageWidget(QtWidgets.QWidget):
     @shortcut('Ctrl+U', "Update levels")
     def updateLevelsButton(self):
         self.updateLevelsWidget.updateLevelsButton.click()
-
 
 # Copyright (C) 2020-2021 ImSwitch developers
 # This file is part of ImSwitch.

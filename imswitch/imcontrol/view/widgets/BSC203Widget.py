@@ -3,10 +3,6 @@ from .basewidgets import Widget
 from imswitch.imcontrol.view import guitools
 
 class BSC203Widget(Widget):
-
-    sigKeyPressed = QtCore.Signal(QtGui.QKeyEvent)
-    sigKeyReleased = QtCore.Signal(QtGui.QKeyEvent)
-    sigWheelMoved = QtCore.Signal(QtGui.QWheelEvent)
     sigHomeAll = QtCore.Signal()
 
     def __init__(self, *args, **kwargs):
@@ -87,16 +83,3 @@ class BSC203Widget(Widget):
         answer = self.msg.question(self, '', "Are you sure you want to home all the motors?", self.msg.Yes | self.msg.No)
         if answer == self.msg.Yes:
             self.sigHomeAll.emit()
-
-    def keyPressEvent(self, event):
-        self.sigKeyPressed.emit(event)
-
-    def keyReleaseEvent(self, event):
-        self.sigKeyReleased.emit(event)
-
-    def wheelEvent(self, event):
-        self.sigWheelMoved.emit(event)
-
-    # def collectEditableFields(self):
-    #     editableFields = []
-    #     editableFields.append()

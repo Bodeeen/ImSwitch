@@ -2,7 +2,6 @@ from qtpy import QtCore, QtGui, QtWidgets
 from .basewidgets import Widget
 
 class SetupStatusWidget(Widget):
-    sigKeyReleased = QtCore.Signal(QtGui.QKeyEvent)
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setWindowTitle('Setup status')
@@ -65,7 +64,5 @@ class SetupStatusWidget(Widget):
         grid.addWidget(self.detHK2info, 8, 0, 1, 1)
         grid.addWidget(self.detHK2, 8, 1, 1, 1)
 
-        self.setFocusPolicy(QtCore.Qt.StrongFocus)
+        # self.setFocusPolicy(QtCore.Qt.StrongFocus)
 
-    def keyReleaseEvent(self, event):
-        self.sigKeyReleased.emit(event)

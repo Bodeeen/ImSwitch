@@ -24,6 +24,11 @@ class ImConWidgetController(WidgetController):
         # Init superclass
         super().__init__(*args, **kwargs)
 
+        #Connect mouse and key signals from widget to communication channel
+        self._widget.sigKeyPressed.connect(self._commChannel.sigKeyPressed)
+        self._widget.sigKeyReleased.connect(self._commChannel.sigKeyReleased)
+        self._widget.sigWheelMoved.connect(self._commChannel.sigWheelMoved)
+
 
 class LiveUpdatedController(ImConWidgetController):
     """ Superclass for those controllers that will update the widgets with an

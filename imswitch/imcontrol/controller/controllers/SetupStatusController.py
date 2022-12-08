@@ -50,7 +50,7 @@ class SetupStatusController(ImConWidgetController):
                              'Straight detection': straightDetectionParamDict}
 
         #Connect keyboard/mouse signals
-        self._widget.sigKeyReleased.connect(self.keyReleased)
+        self._commChannel.sigKeyReleased.connect(self.keyReleased)
 
         #Set to initial position
         self.setConfig(self.setupConfigs['Widefield imaging'])
