@@ -68,7 +68,7 @@ class Reconstructor:
     def __init__(self):
         self.__logger = initLogger(self)
 
-    def simpleDeskew(self, data, cam_px_size, alpha_rad, dy_step_size, recon_vx_size, dev):
+    def simpleDeskew(self, data, cam_px_size, alpha_rad, dy_step_size, recon_vx_size):
         """Extracts the signal of the data according to given parameters.
         Output is a 4D matrix where first dimension is base and last three
         are frame and pixel coordinates."""

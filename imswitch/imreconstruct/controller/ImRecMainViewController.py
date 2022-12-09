@@ -148,19 +148,21 @@ class ImRecMainViewController(ImRecWidgetController):
 
                 if not consolidate or index == 0:
                     reconObj = ReconObj(dataObj.name,
-                                        self._scanParDict,
                                         self._widget.timepoints_text)
 
                 data = dataObj.data
                 if self._widget.bleachBool.value():
                     data = self.bleachingCorrection(data)
 
-                recon = self._reconstructor.simpleDeskew(data, self.)
+                recon = self._reconstructor.simpleDeskew(data, self._widget.getPixelSizeNm(),
+                                                         self._widget.getSkewAngleRad(),
+                                                         self._widget.getDeltaY(),
+                                                         self._widget.getReconstructionVxSize())
             finally:
                 if not preloaded:
                     dataObj.checkAndUnloadData()
 
-            reconObj.addCoeffsTP(coeffs)
+            reconObj.addReconstruction(recon)
             if not consolidate:
                 reconObj.updateImages()
                 self._widget.addNewData(reconObj, reconObj.name)

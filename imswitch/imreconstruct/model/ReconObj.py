@@ -4,7 +4,7 @@ from imswitch.imcommon.model import initLogger
 
 
 class ReconObj:
-    def __init__(self, name, scanParDict, timepoints_text, *args, **kwargs):
+    def __init__(self, name, timepoints_text, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.__logger = initLogger(self, instanceName=name)
 
@@ -12,9 +12,11 @@ class ReconObj:
 
         self.name = name
         self.reconstructed = None
-        self.scanParDict = scanParDict.copy()
 
         self.dispLevels = None
+
+    def addReconstruction(self, reconstruction):
+        self.reconstructed = reconstruction
 
     def setDispLevels(self, levels):
         self.dispLevels = levels
