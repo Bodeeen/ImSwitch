@@ -144,14 +144,14 @@ class TISManager(DetectorManager):
         self._camera.openPropertiesGUI()
 
     def _getTISObj(self, cameraId):
-        try:
-            from imswitch.imcontrol.model.interfaces.tiscamera import CameraTIS
-            self.__logger.debug(f'Trying to initialize TIS camera {cameraId}')
-            camera = CameraTIS(cameraId)
-        except Exception:
-            self.__logger.warning(f'Failed to initialize TIS camera {cameraId}, loading mocker')
-            from imswitch.imcontrol.model.interfaces.tiscamera_mock import MockCameraTIS
-            camera = MockCameraTIS()
+        # try:
+        from imswitch.imcontrol.model.interfaces.tiscamera import CameraTIS
+        self.__logger.debug(f'Trying to initialize TIS camera {cameraId}')
+        camera = CameraTIS(cameraId)
+        # except Exception:
+        #     self.__logger.warning(f'Failed to initialize TIS camera {cameraId}, loading mocker')
+        #     from imswitch.imcontrol.model.interfaces.tiscamera_mock import MockCameraTIS
+        #     camera = MockCameraTIS()
 
         self.__logger.info(f'Initialized camera, model: {camera.model}')
         return camera

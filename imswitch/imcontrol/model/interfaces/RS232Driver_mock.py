@@ -8,6 +8,7 @@ class MockRS232Driver:
         self.__logger = initLogger(self, instanceName=name)
         self._name = name
         self._settings = settings
+        self.resource = MockResource()
         pass
 
     def query(self, arg):
@@ -18,9 +19,11 @@ class MockRS232Driver:
         self.__logger.debug(f"Sending the following to {self._settings['port']}: {arg}")
         pass
 
-    def read(self):
-        self.__logger.debug(f"Reading from {self._settings['port']}")
-        return 'Recieved message"'
+    def read(self, termination=None):
+        pass
+
+    def write(self, msg):
+        self.__logger.debug(f"Writing {msg} to mock {self._settings['port']}")
 
     def initialize(self):
         pass
@@ -28,6 +31,10 @@ class MockRS232Driver:
     def close(self):
         pass
 
+
+class MockResource:
+    def __init__(self):
+        self.timeout = None
 
 # Copyright (C) 2020-2021 ImSwitch developers
 # This file is part of ImSwitch.

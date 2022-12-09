@@ -153,6 +153,7 @@ dependencies:
     - sphinxcontrib-serializinghtml==1.1.5
     - stack-data==0.5.0
     - stringparser==0.5
+    - thorlabs-apt-device==0.3.3
     - tifffile==2022.8.12
     - tinyrpc==1.1.0
     - tomli==2.0.1
@@ -171,4 +172,4 @@ dependencies:
     - zipp==3.8.1
     - zope-event==4.5.0
     - zope-interface==5.4.0
-prefix: C:\Users\STEDRed\miniconda3\envs\imswitch
+prefix: C:\Users\Snouty\miniconda3\envs\imswitch

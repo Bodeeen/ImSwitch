@@ -9,11 +9,16 @@ class SetupStatusController(ImConWidgetController):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-        flipMirrorCOMs = ('COM21', 'COM22', 'COM23')
-        self.tiltedCamName = 'Orca'
+        flipMirrorCOMs = ('COM6', 'COM5', 'COM4')
+        self.tiltedCamName = 'Orca' #Names in imageWidget set in config file
         self.straightCamName = 'WidefieldCamera'
 
-        self.flipMirrors = [APTDevice_Motor(serial_port=port) for port in flipMirrorCOMs]
+        try:
+            self.flipMirrors = [APTDevice_Motor(serial_port=port) for port in flipMirrorCOMs]
+            self._logger.debug('Initlalizes devices in SetupStatusController')
+        except:
+            self._logger.warning('Could not initlalize devices in SetupStatusController')
+            self._widget.setEnabled(False)
 
         """Define configurations"""
         # Note, mirror position depends on how they are physically mounted (there are two holders where the arm can be mounted on the flipper)
@@ -56,19 +61,20 @@ class SetupStatusController(ImConWidgetController):
         self.setConfig(self.setupConfigs['Widefield imaging'])
 
     def setConfig(self, configurationPars: dict):
-
-        self.setFlipMirrorPositions(configurationPars['Flip mirror positions'])
-        ill = configurationPars['Illumination status']
-        det = configurationPars['Detection status']
-        if ill:
-            self._widget.illuminationStatusLabel.setText(ill)
-        if det:
-            self._widget.detectionStatusLabel.setText(det)
-            if det == 'Tilted':
-                self._commChannel.sigSetVisibleLayers.emit((self.tiltedCamName,))
-            elif det == 'Straight':
-                self._commChannel.sigSetVisibleLayers.emit((self.straightCamName,))
-
+        try:
+            self.setFlipMirrorPositions(configurationPars['Flip mirror positions'])
+            ill = configurationPars['Illumination status']
+            det = configurationPars['Detection status']
+            if ill:
+                self._widget.illuminationStatusLabel.setText(ill)
+            if det:
+                self._widget.detectionStatusLabel.setText(det)
+                if det == 'Tilted':
+                    self._commChannel.sigSetVisibleLayers.emit((self.tiltedCamName,))
+                elif det == 'Straight':
+                    self._commChannel.sigSetVisibleLayers.emit((self.straightCamName,))
+        except:
+            self._logger.warning('Could not set setup to given configuration')
     def setFlipMirrorPositions(self, positionList: list):
 
         for i, flipMirror in enumerate(self.flipMirrors):
