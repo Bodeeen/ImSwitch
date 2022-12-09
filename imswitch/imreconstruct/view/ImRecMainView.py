@@ -96,14 +96,7 @@ class ImRecMainView(QtWidgets.QMainWindow):
         self.reconstructionWidget = ReconstructionView()
 
         self.parTree = ReconParTree()
-        self.showPatBool = self.parTree.p.param('Show pattern')
-        self.showPatBool.sigValueChanged.connect(lambda _, v: self.sigShowPatternChanged.emit(v))
         self.bleachBool = self.parTree.p.param('Bleaching correction')
-        self.findPatBtn = self.parTree.p.param('Pattern').param('Find pattern')
-        self.findPatBtn.sigActivated.connect(self.sigFindPattern)
-        self.scanParWinBtn = self.parTree.p.param('Scanning parameters')
-        self.scanParWinBtn.sigActivated.connect(self.sigShowScanParamsClicked)
-        self.parTree.p.param('Pattern').sigTreeStateChanged.connect(self.sigPatternParamsChanged)
 
         self.scanParamsDialog = ScanParamsDialog(
             self, self.r_l_text, self.u_d_text, self.b_f_text,
@@ -186,37 +179,20 @@ class ImRecMainView(QtWidgets.QMainWindow):
         else:
             self.pickDatasetsDialog.show()
 
-    def getPatternParams(self):
-        patternPars = self.parTree.p.param('Pattern')
-        return (np.mod(patternPars.param('Row-offset').value(),
-                       patternPars.param('Row-period').value()),
-                np.mod(patternPars.param('Col-offset').value(),
-                       patternPars.param('Col-period').value()),
-                patternPars.param('Row-period').value(),
-                patternPars.param('Col-period').value())
-
-    def setPatternParams(self, rowOffset, colOffset, rowPeriod, colPeriod):
-        patternPars = self.parTree.p.param('Pattern')
-        patternPars.param('Row-offset').setValue(rowOffset)
-        patternPars.param('Col-offset').setValue(colOffset)
-        patternPars.param('Row-period').setValue(rowPeriod)
-        patternPars.param('Col-period').setValue(colPeriod)
-
     def getComputeDevice(self):
         return self.parTree.p.param('CPU/GPU').value()
 
     def getPixelSizeNm(self):
         return self.parTree.p.param('Pixel size').value()
 
-    def getFwhmNm(self):
-        return self.parTree.p.param('Reconstruction options').param('PSF FWHM').value()
+    def getDeltaY(self):
+        return self.parTree.p.param('Acquisition parameters').param('Delta-Y step size').value()
 
-    def getBgModelling(self):
-        return self.parTree.p.param('Reconstruction options').param('BG modelling').value()
+    def getSkewAngleRad(self):
+        return np.deg2rad(self.parTree.p.param('Acquisition parameters').param('Skew angle').value())
 
-    def getBgGaussianSize(self):
-        return self.parTree.p.param('Reconstruction options').param('BG modelling') \
-            .param('BG Gaussian size').value()
+    def getReconstructionVxSize(self):
+        return self.parTree.p.param('Reconstruction options').param('Reconstruction vx size').value()
 
     def closeEvent(self, event):
         self.sigClosing.emit()
@@ -229,22 +205,14 @@ class ReconParTree(ParameterTree):
 
         # Parameter tree for the reconstruction
         params = [
-            {'name': 'Pixel size', 'type': 'float', 'value': 65, 'suffix': 'nm'},
+            {'name': 'Pixel size', 'type': 'float', 'value': 116, 'suffix': 'nm'},
             {'name': 'CPU/GPU', 'type': 'list', 'values': ['GPU', 'CPU']},
-            {'name': 'Pattern', 'type': 'group', 'children': [
-                {'name': 'Row-offset', 'type': 'float', 'value': 9.89, 'limits': (0, 9999)},
-                {'name': 'Col-offset', 'type': 'float', 'value': 10.4, 'limits': (0, 9999)},
-                {'name': 'Row-period', 'type': 'float', 'value': 11.05, 'limits': (0, 9999)},
-                {'name': 'Col-period', 'type': 'float', 'value': 11.05, 'limits': (0, 9999)},
-                {'name': 'Find pattern', 'type': 'action'}]},
+            {'name': 'Acquisition parameters', 'type': 'group', 'children': [
+                {'name': 'Delta-Y step size', 'type': 'float', 'value': 210, 'limits': (0, 9999)},
+                {'name': 'Skew angle', 'type': 'float', 'value': 35, 'limits': (0, 9999)}]},
             {'name': 'Reconstruction options', 'type': 'group', 'children': [
-                {'name': 'PSF FWHM', 'type': 'float', 'value': 220, 'limits': (0, 9999),
-                 'suffix': 'nm'},
-                {'name': 'BG modelling', 'type': 'list',
-                 'values': ['Constant', 'Gaussian', 'No background'], 'children': [
-                    {'name': 'BG Gaussian size', 'type': 'float', 'value': 500, 'suffix': 'nm'}]}]},
-            {'name': 'Scanning parameters', 'type': 'action'},
-            {'name': 'Show pattern', 'type': 'bool'},
+                {'name': 'Reconstruction vx size', 'type': 'float', 'value': 80, 'limits': (0, 9999),
+                 'suffix': 'nm'}]},
             {'name': 'Bleaching correction', 'type': 'bool'}]
 
         self.p = Parameter.create(name='params', type='group', children=params)

@@ -6,7 +6,7 @@ import tifffile as tiff
 
 import imswitch.imreconstruct.view.guitools as guitools
 from imswitch.imcommon.controller import PickDatasetsController
-from imswitch.imreconstruct.model import DataObj, ReconObj, PatternFinder, SignalExtractor
+from imswitch.imreconstruct.model import DataObj, ReconObj, Reconstructor
 from .DataFrameController import DataFrameController
 from .MultiDataFrameController import MultiDataFrameController
 from .ReconstructionViewController import ReconstructionViewController
@@ -27,34 +27,19 @@ class ImRecMainViewController(ImRecWidgetController):
         self.reconstructionController = self._factory.createController(
             ReconstructionViewController, self._widget.reconstructionWidget
         )
-        self.scanParamsController = self._factory.createController(
-            ScanParamsController, self._widget.scanParamsDialog
-        )
         self.pickDatasetsController = self._factory.createController(
             PickDatasetsController, self._widget.pickDatasetsDialog
         )
 
-        self._signalExtractor = SignalExtractor()
-        self._patternFinder = PatternFinder()
+        self._reconstructor = Reconstructor()
 
         self._currentDataObj = None
-        self._pattern = self._widget.getPatternParams()
-        self._settingPatternParams = False
-        self._scanParDict = {
-            'dimensions': [self._widget.r_l_text, self._widget.u_d_text, self._widget.b_f_text,
-                           self._widget.timepoints_text],
-            'directions': [self._widget.p_text, self._widget.p_text, self._widget.p_text],
-            'steps': ['35', '35', '1', '1'],
-            'step_sizes': ['35', '35', '35', '1'],
-            'unidirectional': True
-        }
         self._dataFolder = None
         self._saveFolder = None
 
         self._commChannel.sigDataFolderChanged.connect(self.dataFolderChanged)
         self._commChannel.sigSaveFolderChanged.connect(self.saveFolderChanged)
         self._commChannel.sigCurrentDataChanged.connect(self.currentDataChanged)
-        self._commChannel.sigScanParamsUpdated.connect(self.scanParamsUpdated)
 
         self._widget.sigSaveReconstruction.connect(lambda: self.saveCurrent('reconstruction'))
         self._widget.sigSaveReconstructionAll.connect(lambda: self.saveAll('reconstruction'))
@@ -73,14 +58,6 @@ class ImRecMainViewController(ImRecWidgetController):
         self._widget.sigQuickLoadData.connect(self.quickLoadData)
         self._widget.sigUpdate.connect(lambda: self.updateScanParams(applyOnCurrentRecon=True))
 
-        self._widget.sigShowPatternChanged.connect(self.togglePattern)
-        self._widget.sigFindPattern.connect(self.findPattern)
-        self._widget.sigShowScanParamsClicked.connect(self.showScanParamsDialog)
-        self._widget.sigPatternParamsChanged.connect(self.updatePattern)
-
-        self.updatePattern()
-        self.updateScanParams()
-
     def dataFolderChanged(self, dataFolder):
         self._dataFolder = dataFolder
 
@@ -96,51 +73,6 @@ class ImRecMainViewController(ImRecWidgetController):
         saveFolder = guitools.askForFolderPath(self._widget)
         if saveFolder:
             self._commChannel.sigSaveFolderChanged.emit(saveFolder)
-
-    def findPattern(self):
-        self._logger.debug('Find pattern clicked')
-        if self._currentDataObj is None:
-            return
-
-        meanData = self._currentDataObj.getMeanData()
-        if len(meanData) < 1:
-            return
-
-        self._logger.debug('Finding pattern')
-        pattern = self._patternFinder.findPattern(meanData)
-        self._logger.debug(f'Pattern found as: {self._pattern}')
-        self.setPatternParams(pattern)
-        self.updatePattern()
-
-    def togglePattern(self, enabled):
-        self._logger.debug('Toggling pattern')
-        self._commChannel.sigPatternVisibilityChanged.emit(enabled)
-
-    def updatePattern(self):
-        if self._settingPatternParams:
-            return
-
-        self._logger.debug('Updating pattern')
-        self._pattern = self._widget.getPatternParams()
-        self._commChannel.sigPatternUpdated.emit(self._pattern)
-
-    def setPatternParams(self, pattern):
-        try:
-            self._settingPatternParams = True
-            self._widget.setPatternParams(*pattern)
-        finally:
-            self._settingPatternParams = False
-
-    def updateScanParams(self, applyOnCurrentRecon=False):
-        self._commChannel.sigScanParamsUpdated.emit(copy.deepcopy(self._scanParDict),
-                                                    applyOnCurrentRecon)
-
-    def scanParamsUpdated(self, scanParDict):
-        self._scanParDict = scanParDict
-
-    def showScanParamsDialog(self):
-        self.updateScanParams()
-        self._widget.showScanParamsDialog()
 
     def quickLoadData(self):
         dataPath = guitools.askForFilePath(self._widget, defaultFolder=self._dataFolder)
@@ -185,69 +117,18 @@ class ImRecMainViewController(ImRecWidgetController):
 
     def currentDataChanged(self, dataObj):
         self._currentDataObj = dataObj
-
+        """Could be used in future to set recon parameters from dataAttr"""
         # Update scan params based on new data
         # TODO: What if the attribute names change in imcontrol?
-        dimensionMap = {
-            b'X': self._widget.r_l_text,
-            b'Y': self._widget.u_d_text,
-            b'Z': self._widget.b_f_text
-        }
-        try:
-            targetsAttr = dataObj.attrs['ScanStage:target_device']
-            for i in range(0, min(3, len(targetsAttr))):
-                self._scanParDict['dimensions'][i] = dimensionMap[targetsAttr[i]]
-        except KeyError:
-            pass
-
-        try:
-            positiveDirectionAttr = dataObj.attrs['ScanStage:positive_direction']
-            for i in range(0, min(3, len(positiveDirectionAttr))):
-                self._scanParDict['directions'][i] = (
-                    self._widget.p_text if positiveDirectionAttr[i]
-                    else self._widget.n_text
-                )
-        except KeyError:
-            pass
-
-        for i in range(0, 2):
-            self._scanParDict['steps'][i] = str(int(np.sqrt(dataObj.numFrames)))
-
-        try:
-            stepSizesAttr = dataObj.attrs['ScanStage:axis_step_size']
-        except KeyError:
-            pass
-        else:
-            for i in range(0, min(4, len(stepSizesAttr))):
-                self._scanParDict['step_sizes'][i] = str(stepSizesAttr[i] * 1000)  # convert um->nm
-
-        self.updateScanParams()
-
-    def extractData(self, data):
-        fwhmNm = self._widget.getFwhmNm()
-        bgModelling = self._widget.getBgModelling()
-        if bgModelling == 'Constant':
-            fwhmNm = np.append(fwhmNm, 9999)  # Code for constant bg
-        elif bgModelling == 'No background':
-            fwhmNm = np.append(fwhmNm, 0)  # Code for zero bg
-        elif bgModelling == 'Gaussian':
-            self._logger.debug('In Gaussian version')
-            fwhmNm = np.append(fwhmNm, self._widget.getBgGaussianSize())
-            self._logger.debug('Appended to sigmas')
-        else:
-            raise ValueError(f'Invalid BG modelling "{bgModelling}" specified; must be either'
-                             f' "Constant", "Gaussian" or "No background".')
-
-        sigmas = np.divide(fwhmNm, 2.355 * self._widget.getPixelSizeNm())
-
-        device = self._widget.getComputeDevice()
-        pattern = self._pattern
-        if device == 'CPU' or device == 'GPU':
-            coeffs = self._signalExtractor.extractSignal(data, sigmas, pattern, device.lower())
-        else:
-            raise ValueError(f'Invalid device "{device}" specified; must be either "CPU" or "GPU"')
-
-        return coeffs
+        # try:
+        #     stepSizesAttr = dataObj.attrs['ScanStage:axis_step_size']
+        # except KeyError:
+        #     pass
+        # else:
+        #     for i in range(0, min(4, len(stepSizesAttr))):
+        #         self._scanParDict['step_sizes'][i] = str(stepSizesAttr[i] * 1000)  # convert um->nm
+        #
+        # self.updateScanParams()
 
     def reconstructCurrent(self):
         if self._currentDataObj is None:
@@ -265,25 +146,16 @@ class ImRecMainViewController(ImRecWidgetController):
             try:
                 dataObj.checkAndLoadData()
 
-                if np.prod(np.array(self._scanParDict['steps'], dtype=int)) < dataObj.numFrames:
-                    self._logger.error('Too many frames in data')
-                    return
-
                 if not consolidate or index == 0:
                     reconObj = ReconObj(dataObj.name,
                                         self._scanParDict,
-                                        self._widget.r_l_text,
-                                        self._widget.u_d_text,
-                                        self._widget.b_f_text,
-                                        self._widget.timepoints_text,
-                                        self._widget.p_text,
-                                        self._widget.n_text)
+                                        self._widget.timepoints_text)
 
                 data = dataObj.data
                 if self._widget.bleachBool.value():
                     data = self.bleachingCorrection(data)
 
-                coeffs = self.extractData(data)
+                recon = self._reconstructor.simpleDeskew(data, self.)
             finally:
                 if not preloaded:
                     dataObj.checkAndUnloadData()
