@@ -57,16 +57,15 @@ class ReconstructionViewController(ImRecWidgetController):
 
     def setImgSlice(self, autoLevels=False, levels=None):
         data = self._widget.getCurrentItemData().reconstructed
-
-        if self.getViewId() == 3:
-            transposeOrder = [0, 1, 2, 3, 5, 4]
-        elif self.getViewId() == 4:
-            transposeOrder = [0, 1, 2, 5, 3, 4]
+        if self.getViewId() == 0:
+            transposeOrder = [0, 1, 2, 3]
+        elif self.getViewId() == 1:
+            transposeOrder = [0, 2, 1, 3]
         else:
-            transposeOrder = [0, 2, 1, 5, 4, 3]
+            transposeOrder = [0, 3, 1, 2]
 
         im = data.transpose(*transposeOrder)
-        axisLabels = np.array(['Dataset', 'Base', 'Time point', 'Slice', 'X', 'Y'])[transposeOrder]
+        axisLabels = np.array(['Time point', 'Slice', 'Y', 'X'])[transposeOrder]
         self._transposeOrder = transposeOrder
 
         self._widget.setImage(im, axisLabels)
@@ -78,11 +77,11 @@ class ReconstructionViewController(ImRecWidgetController):
     def getViewId(self):
         viewName = self._widget.getViewName()
         if viewName == 'standard':
-            return 3
+            return 0
         elif viewName == 'bottom':
-            return 4
+            return 1
         elif viewName == 'left':
-            return 5
+            return 2
         else:
             raise ValueError(f'Unsupported view "{viewName}"')
 

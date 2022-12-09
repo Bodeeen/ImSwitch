@@ -26,10 +26,7 @@ class ImRecMainView(QtWidgets.QMainWindow):
     sigQuickLoadData = QtCore.Signal()
     sigUpdate = QtCore.Signal()
 
-    sigShowPatternChanged = QtCore.Signal(bool)
-    sigFindPattern = QtCore.Signal()
     sigShowScanParamsClicked = QtCore.Signal()
-    sigPatternParamsChanged = QtCore.Signal()
 
     sigClosing = QtCore.Signal()
 
@@ -98,6 +95,7 @@ class ImRecMainView(QtWidgets.QMainWindow):
         self.parTree = ReconParTree()
         self.bleachBool = self.parTree.p.param('Bleaching correction')
 
+
         self.scanParamsDialog = ScanParamsDialog(
             self, self.r_l_text, self.u_d_text, self.b_f_text,
             self.timepoints_text, self.p_text, self.n_text
@@ -157,7 +155,7 @@ class ImRecMainView(QtWidgets.QMainWindow):
     def raiseMultiDataDock(self):
         self.multiDataDock.raiseDock()
 
-    def addNewData(self, reconObj, name):
+    def addNewReconstruction(self, reconObj, name):
         self.reconstructionWidget.addNewData(reconObj, name)
 
     def getMultiDatas(self):
@@ -209,7 +207,9 @@ class ReconParTree(ParameterTree):
             {'name': 'CPU/GPU', 'type': 'list', 'values': ['GPU', 'CPU']},
             {'name': 'Acquisition parameters', 'type': 'group', 'children': [
                 {'name': 'Delta-Y step size', 'type': 'float', 'value': 210, 'limits': (0, 9999)},
-                {'name': 'Skew angle', 'type': 'float', 'value': 35, 'limits': (0, 9999)}]},
+                {'name': 'Skew angle', 'type': 'float', 'value': 35, 'limits': (0, 9999)},
+                {'name': 'Cycles', 'type': 'int', 'value': 10, 'limits': (0, 9999)},
+                {'name': 'Planes in cycle', 'type': 'int', 'value': 20, 'limits': (0, 9999)}]},
             {'name': 'Reconstruction options', 'type': 'group', 'children': [
                 {'name': 'Reconstruction vx size', 'type': 'float', 'value': 80, 'limits': (0, 9999),
                  'suffix': 'nm'}]},

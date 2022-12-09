@@ -1,3 +1,4 @@
+import copy
 import ctypes
 import os
 import time
@@ -73,7 +74,11 @@ class Reconstructor:
         Output is a 4D matrix where first dimension is base and last three
         are frame and pixel coordinates."""
 
+        camera_offset = 100
 
+        permuted_axis = (1, 0, 2)
+        data_correct_axes = np.transpose(data, axes=permuted_axis)
+        adjustedData = cp.array(data_correct_axes - camera_offset).clip(0)
 
         """Make coordiate transformation matrix such that sampleCoordinates = M * dataCoordinates"""
         transformation_mat = cp.array([[cam_px_size * np.sin(alpha_rad), 0, 0],
@@ -85,7 +90,7 @@ class Reconstructor:
         M = cp.matmul(voxelize_scale_mat, transformation_mat)
 
         """Make reconstruction canvas"""
-        size_data = cp.array(data.shape)
+        size_data = cp.array(adjustedData.shape)
         size_data_host = cp.asnumpy(size_data)
         size_sample = cp.ceil(cp.matmul(M, size_data)).astype(int)
         invTransfOnes = cp.zeros(cp.asnumpy(size_sample))
@@ -114,7 +119,7 @@ class Reconstructor:
         #     0)
         cupy_kernel = cp.array(kernel)
         """Reconstruct"""
-        dataOnes = cp.ones_like(data)
+        dataOnes = cp.ones_like(adjustedData)
         threadsperblock = 8
         blocks_per_grid_z = (size_data_host[0] + (threadsperblock - 1)) // threadsperblock
         blocks_per_grid_y = (size_data_host[1] + (threadsperblock - 1)) // threadsperblock
@@ -123,7 +128,7 @@ class Reconstructor:
                        (threadsperblock, threadsperblock, threadsperblock)](dataOnes, invTransfOnes, M, 0)
 
         invNNTransform[(blocks_per_grid_z, blocks_per_grid_y, blocks_per_grid_x),
-                       (threadsperblock, threadsperblock, threadsperblock)](data, recon_canvas, M, 0)
+                       (threadsperblock, threadsperblock, threadsperblock)](adjustedData, recon_canvas, M, 0)
 
         interpolatedData = cpsig.fftconvolve(recon_canvas, cupy_kernel, mode='same')
         interpolatedHtFromOnes = cpsig.fftconvolve(invTransfOnes, cupy_kernel, mode='same').clip(

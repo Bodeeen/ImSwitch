@@ -162,13 +162,13 @@ class ImRecMainViewController(ImRecWidgetController):
                 if not preloaded:
                     dataObj.checkAndUnloadData()
 
-            reconObj.addReconstruction(recon)
             if not consolidate:
-                reconObj.updateImages()
-                self._widget.addNewData(reconObj, reconObj.name)
+                reconObj.setReconstruction(recon)
+                self._widget.addNewReconstruction(reconObj, reconObj.name)
+            else:
+                reconObj.addReconstructionTimepoint(recon)
 
         if consolidate and reconObj is not None:
-            reconObj.updateImages()
             self._widget.addNewData(reconObj, f'{reconObj.name}_multi')
 
     def bleachingCorrection(self, data):

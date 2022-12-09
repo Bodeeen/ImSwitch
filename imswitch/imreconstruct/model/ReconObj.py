@@ -15,8 +15,14 @@ class ReconObj:
 
         self.dispLevels = None
 
-    def addReconstruction(self, reconstruction):
-        self.reconstructed = reconstruction
+    def setReconstruction(self, reconstruction):
+        self.reconstructed = np.array([reconstruction])
+
+    def addReconstructionTimepoint(self, new_reconstruction):
+        if self.reconstructed == None:
+            self.setReconstruction(new_reconstruction)
+        elif self.reconstructed.shape == new_reconstruction.shape:
+            self.reconstructed = np.append(self.reconstructed, np.array([new_reconstruction]), axis=0)
 
     def setDispLevels(self, levels):
         self.dispLevels = levels

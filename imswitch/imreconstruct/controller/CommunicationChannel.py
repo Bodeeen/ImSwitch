@@ -7,6 +7,8 @@ class CommunicationChannel(SignalInterface):
     and Widgets, or between Widgets.
     """
 
+    sigDataStackingChanged = Signal(int, int)
+
     sigDataFolderChanged = Signal(object)  # (dataFolderPath)
 
     sigSaveFolderChanged = Signal(object)  # (saveFolderPath)

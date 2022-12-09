@@ -1,3 +1,4 @@
+import numpy as np
 import pyqtgraph as pg
 from qtpy import QtCore, QtWidgets
 
@@ -101,7 +102,7 @@ class DataFrame(QtWidgets.QFrame):
         self.editWdw.show()
 
     def setImage(self, im, autoLevels):
-        self.img.setImage(im, autoLevels)
+        self.img.setImage(np.flipud(im), autoLevels)
 
     def setPatternGridData(self, x, y):
         self.patternScatter.setData(x, y)
