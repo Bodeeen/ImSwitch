@@ -1,15 +1,13 @@
-import copy
-import ctypes
-import os
-import time
+
 import numpy as np
 import cupy as cp
 from cupyx.scipy import signal as cpsig
-from cupyx.scipy import ndimage as cpndi
-from scipy import signal as ss
 from numba import cuda
 
 from imswitch.imcommon.model import dirtools, initLogger
+
+mempool = cp.get_default_memory_pool()
+pinned_mempool = cp.get_default_pinned_memory_pool()
 
 """ Forward model """
 
@@ -73,67 +71,69 @@ class Reconstructor:
         """Extracts the signal of the data according to given parameters.
         Output is a 4D matrix where first dimension is base and last three
         are frame and pixel coordinates."""
+        try:
+            camera_offset = 100
 
-        camera_offset = 100
+            permuted_axis = (1, 0, 2)
+            data_correct_axes = np.transpose(data, axes=permuted_axis).astype(float)
+            adjustedData = cp.array(data_correct_axes - camera_offset).clip(0)
 
-        permuted_axis = (1, 0, 2)
-        data_correct_axes = np.transpose(data, axes=permuted_axis)
-        adjustedData = cp.array(data_correct_axes - camera_offset).clip(0)
+            """Make coordiate transformation matrix such that sampleCoordinates = M * dataCoordinates"""
+            transformation_mat = cp.array([[cam_px_size * np.sin(alpha_rad), 0, 0],
+                                           [cam_px_size * np.cos(alpha_rad), dy_step_size, 0],
+                                           [0, 0, cam_px_size]])
+            voxelize_scale_mat = cp.array(
+                [[1 / recon_vx_size, 0, 0], [0, 1 / recon_vx_size, 0], [0, 0, 1 / recon_vx_size]])
 
-        """Make coordiate transformation matrix such that sampleCoordinates = M * dataCoordinates"""
-        transformation_mat = cp.array([[cam_px_size * np.sin(alpha_rad), 0, 0],
-                                       [cam_px_size * np.cos(alpha_rad), dy_step_size, 0],
-                                       [0, 0, cam_px_size]])
-        voxelize_scale_mat = cp.array(
-            [[1 / recon_vx_size, 0, 0], [0, 1 / recon_vx_size, 0], [0, 0, 1 / recon_vx_size]])
+            M = cp.matmul(voxelize_scale_mat, transformation_mat)
 
-        M = cp.matmul(voxelize_scale_mat, transformation_mat)
+            """Make reconstruction canvas"""
+            size_data = cp.array(adjustedData.shape)
+            size_data_host = cp.asnumpy(size_data)
+            size_sample = cp.ceil(cp.matmul(M, size_data)).astype(int)
+            invTransfOnes = cp.zeros(cp.asnumpy(size_sample))
+            recon_canvas = cp.zeros(cp.asnumpy(size_sample))
 
-        """Make reconstruction canvas"""
-        size_data = cp.array(adjustedData.shape)
-        size_data_host = cp.asnumpy(size_data)
-        size_sample = cp.ceil(cp.matmul(M, size_data)).astype(int)
-        invTransfOnes = cp.zeros(cp.asnumpy(size_sample))
-        recon_canvas = cp.zeros(cp.asnumpy(size_sample))
+            lateral_ratio = cam_px_size / recon_vx_size  # px size in vx
+            axial_ratio = dy_step_size * np.tan(alpha_rad) / recon_vx_size  # distance between planes in vx
+            z_halfsize = 2 * axial_ratio
+            y_halfsize = 2 * lateral_ratio
+            x_halfsize = 2 * lateral_ratio
+            k_mesh = np.meshgrid(np.linspace(-z_halfsize, z_halfsize, int(np.ceil(2 * z_halfsize))),
+                                 np.linspace(-y_halfsize, y_halfsize, int(np.ceil(2 * y_halfsize))),
+                                 np.linspace(-x_halfsize, x_halfsize, int(np.ceil(2 * x_halfsize))), indexing='ij')
 
-        lateral_ratio = cam_px_size / recon_vx_size  # px size in vx
-        axial_ratio = dy_step_size * np.tan(alpha_rad) / recon_vx_size  # distance between planes in vx
-        z_halfsize = 2 * axial_ratio
-        y_halfsize = 2 * lateral_ratio
-        x_halfsize = 2 * lateral_ratio
-        k_mesh = np.meshgrid(np.linspace(-z_halfsize, z_halfsize, int(np.ceil(2 * z_halfsize))),
-                             np.linspace(-y_halfsize, y_halfsize, int(np.ceil(2 * y_halfsize))),
-                             np.linspace(-x_halfsize, x_halfsize, int(np.ceil(2 * x_halfsize))), indexing='ij')
+            k_prime_z = k_mesh[0]  # *np.cos(alpha) - k_mesh[1]*np.sin(alpha)
+            k_prime_y = k_mesh[1]  # k_mesh[0]*np.sin(alpha) + k_mesh[1]*np.cos(alpha)
+            k_prime_x = k_mesh[2]
+            sigma_lat = lateral_ratio / 2.355
+            sigma_ax = axial_ratio / 2.355
 
-        k_prime_z = k_mesh[0]  # *np.cos(alpha) - k_mesh[1]*np.sin(alpha)
-        k_prime_y = k_mesh[1]  # k_mesh[0]*np.sin(alpha) + k_mesh[1]*np.cos(alpha)
-        k_prime_x = k_mesh[2]
-        sigma_lat = lateral_ratio / 2.355
-        sigma_ax = axial_ratio / 2.355
+            kernel = np.exp(-(
+                        k_prime_x ** 2 / (2 * sigma_lat ** 2) + k_prime_y ** 2 / (2 * sigma_lat ** 2) + k_prime_z ** 2 / (
+                            2 * sigma_ax ** 2)))
+            # kernel = (np.ones_like(k_prime_x) - np.sqrt(
+            #     (k_prime_x / lateral_ratio) ** 2 + (k_prime_y / lateral_ratio) ** 2 + (k_prime_z / axial_ratio) ** 2)).clip(
+            #     0)
+            cupy_kernel = cp.array(kernel)
+            """Reconstruct"""
+            dataOnes = cp.ones_like(adjustedData)
+            threadsperblock = 8
+            blocks_per_grid_z = (size_data_host[0] + (threadsperblock - 1)) // threadsperblock
+            blocks_per_grid_y = (size_data_host[1] + (threadsperblock - 1)) // threadsperblock
+            blocks_per_grid_x = (size_data_host[2] + (threadsperblock - 1)) // threadsperblock
+            invNNTransform[(blocks_per_grid_z, blocks_per_grid_y, blocks_per_grid_x),
+                           (threadsperblock, threadsperblock, threadsperblock)](dataOnes, invTransfOnes, M, 0)
 
-        kernel = np.exp(-(
-                    k_prime_x ** 2 / (2 * sigma_lat ** 2) + k_prime_y ** 2 / (2 * sigma_lat ** 2) + k_prime_z ** 2 / (
-                        2 * sigma_ax ** 2)))
-        # kernel = (np.ones_like(k_prime_x) - np.sqrt(
-        #     (k_prime_x / lateral_ratio) ** 2 + (k_prime_y / lateral_ratio) ** 2 + (k_prime_z / axial_ratio) ** 2)).clip(
-        #     0)
-        cupy_kernel = cp.array(kernel)
-        """Reconstruct"""
-        dataOnes = cp.ones_like(adjustedData)
-        threadsperblock = 8
-        blocks_per_grid_z = (size_data_host[0] + (threadsperblock - 1)) // threadsperblock
-        blocks_per_grid_y = (size_data_host[1] + (threadsperblock - 1)) // threadsperblock
-        blocks_per_grid_x = (size_data_host[2] + (threadsperblock - 1)) // threadsperblock
-        invNNTransform[(blocks_per_grid_z, blocks_per_grid_y, blocks_per_grid_x),
-                       (threadsperblock, threadsperblock, threadsperblock)](dataOnes, invTransfOnes, M, 0)
+            invNNTransform[(blocks_per_grid_z, blocks_per_grid_y, blocks_per_grid_x),
+                           (threadsperblock, threadsperblock, threadsperblock)](adjustedData, recon_canvas, M, 0)
 
-        invNNTransform[(blocks_per_grid_z, blocks_per_grid_y, blocks_per_grid_x),
-                       (threadsperblock, threadsperblock, threadsperblock)](adjustedData, recon_canvas, M, 0)
-
-        interpolatedData = cpsig.fftconvolve(recon_canvas, cupy_kernel, mode='same')
-        interpolatedHtFromOnes = cpsig.fftconvolve(invTransfOnes, cupy_kernel, mode='same').clip(
-            0.1)  # Avoid divide by zero
-        reconstructed = cp.asnumpy(cp.divide(interpolatedData, interpolatedHtFromOnes))
+            interpolatedData = cpsig.fftconvolve(recon_canvas, cupy_kernel, mode='same')
+            interpolatedHtFromOnes = cpsig.fftconvolve(invTransfOnes, cupy_kernel, mode='same').clip(
+                0.1)  # Avoid divide by zero
+            reconstructed = cp.asnumpy(cp.divide(interpolatedData, interpolatedHtFromOnes))
+        finally:
+            mempool.free_all_blocks()
 
         return reconstructed
 

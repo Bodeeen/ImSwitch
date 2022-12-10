@@ -8,8 +8,6 @@ class DataEditController(ImRecWidgetController):
         super().__init__(*args, **kwargs)
         self._dataObj = None
         self._meanData = None
-        self._cycles = None
-        self._planes_in_cycle = None
         self._widget.sigImageSliceChanged.connect(self.setImgSlice)
         self._widget.sigShowMeanClicked.connect(self.showMean)
         self._widget.sigSetDarkFrameClicked.connect(self.setDarkFrame)
@@ -22,9 +20,6 @@ class DataEditController(ImRecWidgetController):
                                           self._dataObj.numFrames)
 
     def setImgSlice(self, frameNumber):
-        restack = self.restackedRadio.value()
-        if restack:
-            frameNumber = self._cycles * frameNumber // self._planes_in_cycle + np.mod(frameNumber, self._planes_in_cycle)
         if self._dataObj is None or frameNumber >= len(self._dataObj.data):
             return
 

@@ -20,6 +20,7 @@ class DataObj:
         self._datasetName = datasetName
         self._attrs = None
 
+
     @property
     def data(self):
         if self._data is not None:

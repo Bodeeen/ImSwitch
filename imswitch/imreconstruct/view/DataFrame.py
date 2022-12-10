@@ -50,6 +50,8 @@ class DataFrame(QtWidgets.QFrame):
                                                      self.sigFrameNumberChanged.emit(int(x))))
         self.frameNum.setFixedWidth(45)
 
+        self.restackRadio = QtWidgets.QRadioButton('Show restacked data')
+
         self.dataName = QtWidgets.QLabel('File:')
         self.datasetName = QtWidgets.QLabel('Dataset:')
         numFramesLabel = QtWidgets.QLabel('No. frames:')
@@ -84,6 +86,7 @@ class DataFrame(QtWidgets.QFrame):
         layout.addWidget(self.frameNum, 1, 5)
         layout.addWidget(self.adjustDataBtn, 2, 0)
         layout.addWidget(self.unloadDataBtn, 2, 1)
+        layout.addWidget(self.restackRadio, 2, 2)
         layout.addWidget(numFramesLabel, 2, 4)
         layout.addWidget(self.numFrames, 2, 5)
         layout.addWidget(imageWidget, 3, 0, 1, -1)

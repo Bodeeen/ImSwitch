@@ -35,12 +35,7 @@ class ImRecMainView(QtWidgets.QMainWindow):
         self.setWindowTitle('Image Reconstruction')
 
         # self parameters
-        self.r_l_text = 'Right/Left'
-        self.u_d_text = 'Up/Down'
-        self.b_f_text = 'Back/Forth'
         self.timepoints_text = 'Timepoints'
-        self.p_text = 'pos'
-        self.n_text = 'neg'
 
         # Actions in menubar
         menuBar = self.menuBar()
@@ -94,12 +89,6 @@ class ImRecMainView(QtWidgets.QMainWindow):
 
         self.parTree = ReconParTree()
         self.bleachBool = self.parTree.p.param('Bleaching correction')
-
-
-        self.scanParamsDialog = ScanParamsDialog(
-            self, self.r_l_text, self.u_d_text, self.b_f_text,
-            self.timepoints_text, self.p_text, self.n_text
-        )
 
         self.pickDatasetsDialog = PickDatasetsDialog(self, allowMultiSelect=True)
 
@@ -189,8 +178,17 @@ class ImRecMainView(QtWidgets.QMainWindow):
     def getSkewAngleRad(self):
         return np.deg2rad(self.parTree.p.param('Acquisition parameters').param('Skew angle').value())
 
+    def getCycles(self):
+        return self.parTree.p.param('Acquisition parameters').param('Cycles').value()
+    def getPlanesInCycle(self):
+        return self.parTree.p.param('Acquisition parameters').param('Planes in cycle').value()
+    def getTimepoints(self):
+        return self.parTree.p.param('Acquisition parameters').param('Timepoints').value()
     def getReconstructionVxSize(self):
         return self.parTree.p.param('Reconstruction options').param('Reconstruction vx size').value()
+
+    def getRestackBool(self):
+        return self.parTree.p.param('Reconstruction options').param('Restack before deskewing').value()
 
     def closeEvent(self, event):
         self.sigClosing.emit()
@@ -209,10 +207,12 @@ class ReconParTree(ParameterTree):
                 {'name': 'Delta-Y step size', 'type': 'float', 'value': 210, 'limits': (0, 9999)},
                 {'name': 'Skew angle', 'type': 'float', 'value': 35, 'limits': (0, 9999)},
                 {'name': 'Cycles', 'type': 'int', 'value': 10, 'limits': (0, 9999)},
-                {'name': 'Planes in cycle', 'type': 'int', 'value': 20, 'limits': (0, 9999)}]},
+                {'name': 'Planes in cycle', 'type': 'int', 'value': 20, 'limits': (0, 9999)},
+                {'name': 'Timepoints', 'type': 'int', 'value': 1, 'limits': (0, 9999)}]},
             {'name': 'Reconstruction options', 'type': 'group', 'children': [
-                {'name': 'Reconstruction vx size', 'type': 'float', 'value': 80, 'limits': (0, 9999),
-                 'suffix': 'nm'}]},
+                {'name': 'Reconstruction vx size', 'type': 'float', 'value': 100, 'limits': (0, 9999),
+                 'suffix': 'nm'},
+                {'name': 'Restack before deskewing', 'type': 'bool'}]},
             {'name': 'Bleaching correction', 'type': 'bool'}]
 
         self.p = Parameter.create(name='params', type='group', children=params)
@@ -254,9 +254,9 @@ class BtnFrame(QtWidgets.QFrame):
         self.setLayout(layout)
 
         layout.addWidget(self.quickLoadDataBtn, 0, 0, 1, 2)
-        layout.addWidget(self.reconCurrBtn, 1, 0)
-        layout.addWidget(self.reconMultiBtn, 1, 1)
-        layout.addWidget(self.updateBtn, 2, 0, 1, 2)
+        layout.addWidget(self.reconCurrBtn, 1, 0, 1, 2)
+        layout.addWidget(self.reconMultiBtn, 2, 0, 1, 2)
+        # layout.addWidget(self.updateBtn, 2, 0, 1, 2)
 
 
 # Copyright (C) 2020-2021 ImSwitch developers

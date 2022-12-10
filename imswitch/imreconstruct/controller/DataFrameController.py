@@ -17,15 +17,22 @@ class DataFrameController(ImRecWidgetController):
         self._planes_in_cycle = None
 
         self._commChannel.sigCurrentDataChanged.connect(self.currentDataChanged)
-        self._commChannel.sigDataStackingChanged(self.changeDataStacking)
+        self._commChannel.sigDataStackingChanged.connect(self.changeDataStacking)
 
         self._widget.sigShowMeanClicked.connect(self.showMean)
         self._widget.sigAdjustDataClicked.connect(self.adjustData)
         self._widget.sigUnloadDataClicked.connect(self.unloadData)
         self._widget.sigFrameNumberChanged.connect(self.setImgSlice)
         self._widget.sigFrameSliderChanged.connect(self.setImgSlice)
+        self._widget.restackRadio.toggled.connect(self.restackToggled)
+
+
+    def restackToggled(self):
+        frameNum = int(self._widget.frameNum.text())
+        self.setImgSlice(frameNum)
 
     def changeDataStacking(self, cycles, planes_in_cycle):
+        self._logger.debug('Changing data stacking')
         self._cycles = cycles
         self._planes_in_cycle = planes_in_cycle
 
@@ -43,9 +50,11 @@ class DataFrameController(ImRecWidgetController):
         self._widget.setShowPattern(showPattern)
 
     def setImgSlice(self, frameNumber):
-        restack = self.restackedRadio.value()
+        restack = self._widget.restackRadio.isChecked()
         if restack:
-            frameNumber = self._cycles * frameNumber // self._planes_in_cycle + np.mod(frameNumber, self._planes_in_cycle)
+            cind = np.mod(frameNumber, self._cycles)
+            pind = frameNumber // self._cycles
+            frameNumber = cind * self._planes_in_cycle + pind
         self._widget.setImage(self._dataObj.data[frameNumber], autoLevels=False)
 
     def unloadData(self):

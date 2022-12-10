@@ -48,6 +48,8 @@ class ImRecMainViewController(ImRecWidgetController):
         self._widget.sigSetDataFolder.connect(self.setDataFolder)
         self._widget.sigSetSaveFolder.connect(self.setSaveFolder)
 
+        self._widget.parTree.p.param('Acquisition parameters').sigTreeStateChanged.connect(self.acquisitionParsChanged)
+
         self._widget.sigReconstuctCurrent.connect(self.reconstructCurrent)
         self._widget.sigReconstructMultiConsolidated.connect(
             lambda: self.reconstructMulti(consolidate=True)
@@ -58,6 +60,11 @@ class ImRecMainViewController(ImRecWidgetController):
         self._widget.sigQuickLoadData.connect(self.quickLoadData)
         self._widget.sigUpdate.connect(lambda: self.updateScanParams(applyOnCurrentRecon=True))
 
+        self.acquisitionParsChanged()
+    def acquisitionParsChanged(self):
+        cycles = self._widget.getCycles()
+        planes_in_cycle = self._widget.getPlanesInCycle()
+        self._commChannel.sigDataStackingChanged.emit(cycles, planes_in_cycle)
     def dataFolderChanged(self, dataFolder):
         self._dataFolder = dataFolder
 
@@ -154,7 +161,20 @@ class ImRecMainViewController(ImRecWidgetController):
                 if self._widget.bleachBool.value():
                     data = self.bleachingCorrection(data)
 
-                recon = self._reconstructor.simpleDeskew(data, self._widget.getPixelSizeNm(),
+                """Restack data"""
+                if self._widget.getRestackBool():
+                    try:
+                        cycles = self._widget.getCycles()
+                        planes_in_cycle = self._widget.getPlanesInCycle()
+                        restacked = np.zeros_like(data)
+                        for i in range(planes_in_cycle):
+                            restacked[i * cycles:(i + 1) * cycles] = data[i::planes_in_cycle]
+                    except ValueError:
+                        self._logger.warning('Data shape does not match given restacking parameters')
+                else:
+                    restacked = data
+
+                recon = self._reconstructor.simpleDeskew(restacked, self._widget.getPixelSizeNm(),
                                                          self._widget.getSkewAngleRad(),
                                                          self._widget.getDeltaY(),
                                                          self._widget.getReconstructionVxSize())
