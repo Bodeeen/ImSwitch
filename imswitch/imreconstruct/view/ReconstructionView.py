@@ -136,7 +136,6 @@ class ReconstructionView(QtWidgets.QFrame):
             row = self.reconList.selectedIndexes()[0].row()
             self.reconList.takeItem(row)
             numSelected -= 1
-
     def removeAllRecon(self):
         for i in range(self.reconList.count()):
             currRow = self.reconList.currentRow()

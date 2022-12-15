@@ -19,6 +19,7 @@ class ReconstructionViewController(ImRecWidgetController):
         self._widget.sigAxisStepChanged.connect(self.axisStepChanged)
         self._widget.sigViewChanged.connect(lambda: self.fullUpdate(levels=None))
 
+
     def getActiveReconObj(self):
         return self._widget.getCurrentItemData()
 
@@ -56,7 +57,9 @@ class ReconstructionViewController(ImRecWidgetController):
         self._prevViewId = self.getViewId()
 
     def setImgSlice(self, autoLevels=False, levels=None):
-        data = self._widget.getCurrentItemData().reconstructed
+        data = self._widget.getCurrentItemData().getReconstruction()
+        if data is None:
+            pass
         if self.getViewId() == 0:
             transposeOrder = [0, 1, 2, 3]
         elif self.getViewId() == 1:
@@ -67,7 +70,6 @@ class ReconstructionViewController(ImRecWidgetController):
         im = data.transpose(*transposeOrder)
         axisLabels = np.array(['Time point', 'Slice', 'Y', 'X'])[transposeOrder]
         self._transposeOrder = transposeOrder
-
         self._widget.setImage(im, axisLabels)
         if autoLevels:
             self.updateLevelsRange()

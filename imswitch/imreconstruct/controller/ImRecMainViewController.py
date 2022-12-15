@@ -40,6 +40,7 @@ class ImRecMainViewController(ImRecWidgetController):
         self._commChannel.sigDataFolderChanged.connect(self.dataFolderChanged)
         self._commChannel.sigSaveFolderChanged.connect(self.saveFolderChanged)
         self._commChannel.sigCurrentDataChanged.connect(self.currentDataChanged)
+        self._commChannel.sigNewDataAddedFromModule.connect(self.newDataFromModule)
 
         self._widget.sigSaveReconstruction.connect(lambda: self.saveCurrent('reconstruction'))
         self._widget.sigSaveReconstructionAll.connect(lambda: self.saveAll('reconstruction'))
@@ -122,6 +123,10 @@ class ImRecMainViewController(ImRecWidgetController):
             else:
                 pass
 
+    def newDataFromModule(self):
+        if self._widget.getAutoReconstructNewDataBool():
+            self.reconstructCurrent()
+
     def currentDataChanged(self, dataObj):
         self._currentDataObj = dataObj
         """Could be used in future to set recon parameters from dataAttr"""
@@ -147,6 +152,7 @@ class ImRecMainViewController(ImRecWidgetController):
         self.reconstruct(self._widget.getMultiDatas(), consolidate)
 
     def reconstruct(self, dataObjs, consolidate):
+        #consolidate not fully implemented now
         reconObj = None
         for index, dataObj in enumerate(dataObjs):
             preloaded = dataObj.dataLoaded
@@ -158,38 +164,47 @@ class ImRecMainViewController(ImRecWidgetController):
                                         self._widget.timepoints_text)
 
                 data = dataObj.data
-                if self._widget.bleachBool.value():
+                if self._widget.getBleachCorrectionBool():
                     data = self.bleachingCorrection(data)
 
-                """Restack data"""
-                if self._widget.getRestackBool():
-                    try:
-                        cycles = self._widget.getCycles()
-                        planes_in_cycle = self._widget.getPlanesInCycle()
-                        restacked = np.zeros_like(data)
-                        for i in range(planes_in_cycle):
-                            restacked[i * cycles:(i + 1) * cycles] = data[i::planes_in_cycle]
-                    except ValueError:
-                        self._logger.warning('Data shape does not match given restacking parameters')
-                else:
-                    restacked = data
+                timepoints = self._widget.getTimepoints()
+                if timepoints > 1 and self._widget.getAverageTimepointsBool():
+                    shape = data.shape
+                    reshaped = np.reshape(data, (timepoints, shape[0]//timepoints, shape[1], shape[2]))
+                    data = np.mean(reshaped, axis=0)
+                    timepoints = 1
 
-                recon = self._reconstructor.simpleDeskew(restacked, self._widget.getPixelSizeNm(),
-                                                         self._widget.getSkewAngleRad(),
-                                                         self._widget.getDeltaY(),
-                                                         self._widget.getReconstructionVxSize())
+                for tp in range(timepoints):
+                    cycles = self._widget.getCycles()
+                    planes_in_cycle = self._widget.getPlanesInCycle()
+                    """Restack data"""
+                    slices = cycles * planes_in_cycle
+                    tp_data = data[tp*slices:(tp + 1)*slices]
+                    if self._widget.getRestackBool():
+                        try:
+                            restacked = np.zeros_like(tp_data)
+                            for i in range(planes_in_cycle):
+                                restacked[i * cycles:(i + 1) * cycles] = tp_data[i::planes_in_cycle]
+                        except ValueError:
+                            self._logger.warning('Data shape does not match given restacking parameters')
+                    else:
+                        restacked = tp_data
+                    self._logger.debug('Reconstructing data tp: %s' % tp)
+                    recon = self._reconstructor.simpleDeskew(restacked, self._widget.getPixelSizeNm(),
+                                                             self._widget.getSkewAngleRad(),
+                                                             self._widget.getDeltaY(),
+                                                             self._widget.getReconstructionVxSize())
+                    reconObj.addReconstructionTimepoint(recon)
+
             finally:
                 if not preloaded:
                     dataObj.checkAndUnloadData()
 
             if not consolidate:
-                reconObj.setReconstruction(recon)
                 self._widget.addNewReconstruction(reconObj, reconObj.name)
-            else:
-                reconObj.addReconstructionTimepoint(recon)
 
-        if consolidate and reconObj is not None:
-            self._widget.addNewData(reconObj, f'{reconObj.name}_multi')
+        if consolidate:
+            self._widget.addNewReconstruction(reconObj, f'{reconObj.name}_multi')
 
     def bleachingCorrection(self, data):
         correctedData = data.copy()
@@ -246,37 +261,37 @@ class ImRecMainViewController(ImRecWidgetController):
                     raise ValueError(f'Invalid save data type "{dataType}"')
 
     def saveReconstruction(self, reconObj, filePath):
-        scanParDict = reconObj.getScanParams()
-        vxsizec = int(float(
-            scanParDict['step_sizes'][scanParDict['dimensions'].index(
-                self._widget.r_l_text
-            )]
-        ))
-        vxsizer = int(float(
-            scanParDict['step_sizes'][scanParDict['dimensions'].index(
-                self._widget.u_d_text
-            )]
-        ))
-        vxsizez = int(float(
-            reconObj.scanParDict['step_sizes'][scanParDict['dimensions'].index(
-                self._widget.b_f_text
-            )]
-        ))
-        dt = int(float(
-            scanParDict['step_sizes'][scanParDict['dimensions'].index(
-                self._widget.timepoints_text
-            )]
-        ))
+        # scanParDict = reconObj.getScanParams()
+        # vxsizec = int(float(
+        #     scanParDict['step_sizes'][scanParDict['dimensions'].index(
+        #         self._widget.r_l_text
+        #     )]
+        # ))
+        # vxsizer = int(float(
+        #     scanParDict['step_sizes'][scanParDict['dimensions'].index(
+        #         self._widget.u_d_text
+        #     )]
+        # ))
+        # vxsizez = int(float(
+        #     reconObj.scanParDict['step_sizes'][scanParDict['dimensions'].index(
+        #         self._widget.b_f_text
+        #     )]
+        # ))
+        # dt = int(float(
+        #     scanParDict['step_sizes'][scanParDict['dimensions'].index(
+        #         self._widget.timepoints_text
+        #     )]
+        # ))
 
-        self._logger.debug(f'Trying to save to: {filePath}, Vx size: {vxsizec, vxsizer, vxsizez},'
-                           f' dt: {dt}')
+        self._logger.debug(f'Trying to save to: {filePath}, Vx size: {self._widget.getReconstructionVxSize(), self._widget.getReconstructionVxSize(), self._widget.getReconstructionVxSize()},'
+                           f' dt: -')
         # Reconstructed image
         reconstrData = copy.deepcopy(reconObj.getReconstruction())
-        reconstrData = reconstrData[:, 0, :, :, :, :]
+        reconstrData = np.array([reconstrData])
         reconstrData = np.swapaxes(reconstrData, 1, 2)
-        tiff.imwrite(filePath, reconstrData,
-                     imagej=True, resolution=(1 / vxsizec, 1 / vxsizer),
-                     metadata={'spacing': vxsizez, 'unit': 'nm', 'axes': 'TZCYX'})
+        tiff.imwrite(filePath, reconstrData.astype(np.float32),
+                     imagej=True, resolution=(1 / self._widget.getReconstructionVxSize(), 1 / self._widget.getReconstructionVxSize()),
+                     metadata={'spacing': self._widget.getReconstructionVxSize(), 'unit': 'nm', 'axes': 'TZCYX'})
 
     def saveCoefficients(self, reconObj, filePath):
         coeffs = copy.deepcopy(reconObj.getCoeffs())

@@ -72,20 +72,24 @@ class RecordingWidget(Widget):
         modeTitle.setTextFormat(QtCore.Qt.RichText)
 
         self.specifyFrames = QtWidgets.QRadioButton('Number of frames')
+        self.specifyFrames.setEnabled(False)
         self.currentFrame = QtWidgets.QLabel('0 /')
         self.currentFrame.setAlignment((QtCore.Qt.AlignRight |
                                         QtCore.Qt.AlignVCenter))
         self.numExpositionsEdit = QtWidgets.QLineEdit('100')
 
         self.specifyTime = QtWidgets.QRadioButton('Time (s)')
+        self.specifyTime.setEnabled(False)
         self.currentTime = QtWidgets.QLabel('0 / ')
         self.currentTime.setAlignment((QtCore.Qt.AlignRight |
                                        QtCore.Qt.AlignVCenter))
         self.timeToRec = QtWidgets.QLineEdit('1')
 
         self.recScanOnceBtn = QtWidgets.QRadioButton('Scan once')
+        self.recScanOnceBtn.setEnabled(False)
 
         self.recScanLapseBtn = QtWidgets.QRadioButton('Time-lapse scan')
+        self.recScanLapseBtn.setEnabled(False)
         self.currentLapse = QtWidgets.QLabel('0 / ')
         self.timeLapseEdit = QtWidgets.QLineEdit('5')
         self.freqLabel = QtWidgets.QLabel('Freq [s]')

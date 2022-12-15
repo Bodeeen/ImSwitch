@@ -2,6 +2,7 @@ from imswitch.imcommon.model import initLogger
 import numpy as np
 from imswitch.imcommon.framework import Signal, SignalInterface, Timer, Thread, Worker
 from pyvisa.errors import VisaIOError, InvalidSession
+from serial.serialutil import SerialException
 import time
 
 class TriggerScopeManager(SignalInterface):
@@ -233,9 +234,7 @@ class SerialMonitor(Worker):
 
         try:
             msg = self._rs232Manager.read(termination='\r\n')
-        except VisaIOError:
-            msg = None
-        except InvalidSession:
+        except (VisaIOError, InvalidSession, SerialException, TypeError):
             msg = None
 
         #Check content of message

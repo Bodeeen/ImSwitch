@@ -3,6 +3,8 @@ from qtpy import QtCore
 from ..basecontrollers import ImConWidgetController
 from serial.serialutil import SerialException
 
+"""If motors freak out, open the Kinesis software and make sure the device is set to HS NanoMax 300 X/Y/Z"""
+
 """
 Windows Only: Enable Virtual COM Port¶
 On Windows, the virtual serial communications port (VCP) may need to be enabled in the driver options for the USB 
@@ -46,12 +48,12 @@ class BSC203Controller(ImConWidgetController):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         home = False
-        port = 'COM25'
+        port = 'COM11'
         try:
             self.dev = BSC(serial_port=port, vid=None, pid=None, manufacturer=None, product=None, serial_number=None,
                            location=None, home=home, x=3, invert_direction_logic=False, swap_limit_switches=True)
         except SerialException:
-            self._logger.debug('Could not initialize NanoMax motorized stage, might not be switched on.')
+            self._logger.warning('Could not initialize NanoMax motorized stage, might not be switched on.')
             self._widget.setEnabled(False)
             return
         self.dev._log.setLevel('DEBUG')
@@ -62,7 +64,7 @@ class BSC203Controller(ImConWidgetController):
             self._logger.debug('Finished homing')
 
         self.initialZPos_mm = 1
-        self.initVelXY, self.initVelZ = 2000, 2000
+        self.initVelXY, self.initVelZ = 300, 300
         self.initAccXY, self.initAccZ = 4000, 4000
         self.initialize()
         self.getPosUpdateInterv_ms = 100
@@ -84,9 +86,9 @@ class BSC203Controller(ImConWidgetController):
         self._widget.sigHomeAll.connect(self.homeAll)
 
         #Connect keyboard/mouse signals
-        self._widget.sigKeyPressed.connect(self.keyPressed)
-        self._widget.sigKeyReleased.connect(self.keyReleased)
-        self._widget.sigWheelMoved.connect(self.wheelMoved)
+        self._commChannel.sigKeyPressed.connect(self.keyPressed)
+        self._commChannel.sigKeyReleased.connect(self.keyReleased)
+        self._commChannel.sigWheelMoved.connect(self.wheelMoved)
 
         "Start timer"
         self.timer = QtCore.QTimer()
@@ -119,7 +121,7 @@ class BSC203Controller(ImConWidgetController):
         self.dev.set_velocity_params(acceleration=4506, max_velocity=21987328 * 5, bay=0, channel=0)
         self.dev.set_velocity_params(acceleration=4506, max_velocity=21987328 * 5, bay=1, channel=0)
         self.dev.set_velocity_params(acceleration=4506, max_velocity=21987328 * 5, bay=2, channel=0)
-        self.move_absolute_mm(self.initialZPos_mm, 2)
+        # self.move_absolute_mm(self.initialZPos_mm, 2)
         self.setInitialVelocity()
 
     def setInitialVelocity(self):
@@ -247,6 +249,7 @@ class BSC203Controller(ImConWidgetController):
                 self.stop(Zchan)
 
     def wheelMoved(self, event):
-        wheelDir = int(event.angleDelta().y() / 120)
-        currentZPos = self.getPosition_mm()[2]
-        self.move_absolute_mm(currentZPos + (self.um_per_wheelStep / 1000) * wheelDir, axis=2)
+        pass
+        # wheelDir = int(event.angleDelta().y() / 120)
+        # currentZPos = self.getPosition_mm()[2]
+        # self.move_absolute_mm(currentZPos + (self.um_per_wheelStep / 1000) * wheelDir, axis=2)

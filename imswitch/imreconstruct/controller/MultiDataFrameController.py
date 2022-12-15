@@ -58,6 +58,10 @@ class MultiDataFrameController(ImRecWidgetController):
                 name, datasetName, path=vFileItem.filePath if vFileItem.savedToDisk else None,
                 file=data
             )
+        items = self._widget.dataList.count()
+        self._widget.dataList.setCurrentRow(items - 1) # -1 for zero-indexed
+        self.setAsCurrentData()
+        self._commChannel.sigNewDataAddedFromModule.emit()
 
     def memoryDataSavedToDisk(self, name, filePath):
         for dataObj in self.getDataObjsByMemRecordingName(name):

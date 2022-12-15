@@ -19,11 +19,14 @@ class ReconObj:
         self.reconstructed = np.array([reconstruction])
 
     def addReconstructionTimepoint(self, new_reconstruction):
-        if self.reconstructed == None:
-            self.setReconstruction(new_reconstruction)
-        elif self.reconstructed.shape == new_reconstruction.shape:
-            self.reconstructed = np.append(self.reconstructed, np.array([new_reconstruction]), axis=0)
-
+        if not new_reconstruction is None:
+            if self.reconstructed is None:
+                self.setReconstruction(new_reconstruction)
+            elif self.reconstructed.shape[1::] == new_reconstruction.shape:
+                self.reconstructed = np.append(self.reconstructed, np.array([new_reconstruction]), axis=0)
+            self.__logger.debug('Added timepoint, ndim of reconstruction is %s', self.reconstructed.ndim)
+        else:
+            self.__logger.warning('Tried to add reconstruction that is None')
     def setDispLevels(self, levels):
         self.dispLevels = levels
 

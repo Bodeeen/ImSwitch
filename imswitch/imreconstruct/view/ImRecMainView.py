@@ -88,7 +88,9 @@ class ImRecMainView(QtWidgets.QMainWindow):
         self.reconstructionWidget = ReconstructionView()
 
         self.parTree = ReconParTree()
-        self.bleachBool = self.parTree.p.param('Bleaching correction')
+
+        self.parTree.p.param('Autoreconstruct data from module').setValue(True)
+        self.parTree.p.param('Reconstruction options').param('Restack before deskewing').setValue(True)
 
         self.pickDatasetsDialog = PickDatasetsDialog(self, allowMultiSelect=True)
 
@@ -190,6 +192,14 @@ class ImRecMainView(QtWidgets.QMainWindow):
     def getRestackBool(self):
         return self.parTree.p.param('Reconstruction options').param('Restack before deskewing').value()
 
+    def getBleachCorrectionBool(self):
+        return self.parTree.p.param('Reconstruction options').param('Bleaching correction').value()
+
+    def getAverageTimepointsBool(self):
+        return self.parTree.p.param('Reconstruction options').param('Average timepoints').value()
+    def getAutoReconstructNewDataBool(self):
+        return self.parTree.p.param('Autoreconstruct data from module').value()
+
     def closeEvent(self, event):
         self.sigClosing.emit()
         event.accept()
@@ -212,8 +222,10 @@ class ReconParTree(ParameterTree):
             {'name': 'Reconstruction options', 'type': 'group', 'children': [
                 {'name': 'Reconstruction vx size', 'type': 'float', 'value': 100, 'limits': (0, 9999),
                  'suffix': 'nm'},
-                {'name': 'Restack before deskewing', 'type': 'bool'}]},
-            {'name': 'Bleaching correction', 'type': 'bool'}]
+                {'name': 'Bleaching correction', 'type': 'bool'},
+                {'name': 'Restack before deskewing', 'type': 'bool'},
+                {'name': 'Average timepoints', 'type': 'bool'}]},
+            {'name': 'Autoreconstruct data from module', 'type': 'bool'}]
 
         self.p = Parameter.create(name='params', type='group', children=params)
         self.setParameters(self.p, showTop=False)

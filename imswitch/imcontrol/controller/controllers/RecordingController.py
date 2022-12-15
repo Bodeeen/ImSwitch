@@ -29,7 +29,7 @@ class RecordingController(ImConWidgetController):
         self._widget.setSnapSaveMode(SaveMode.Disk.value)
         self._widget.setSnapSaveModeVisible(self._setupInfo.hasWidget('Image'))
 
-        self._widget.setRecSaveMode(SaveMode.Disk.value)
+        self._widget.setRecSaveMode(SaveMode.DiskAndRAM.value)
         self._widget.setRecSaveModeVisible(
             self._moduleCommChannel.isModuleRegistered('imreconstruct')
         )

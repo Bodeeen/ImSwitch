@@ -25,27 +25,27 @@ class SetupStatusController(ImConWidgetController):
         wideFieldParamDict = {'Illumination status': 'Widefield',
                               'Detection status': 'Straight',
                               'Flip mirror positions': [False, False, True],
-                              'Hot key': QtCore.Qt.Key_1}
+                              'Hot key': QtCore.Qt.Key_F1}
         lightSheetParamDict = {'Illumination status': 'Light sheet',
                                'Detection status': 'Tilted',
                                'Flip mirror positions': [True, True, False],
-                               'Hot key': QtCore.Qt.Key_2}
+                               'Hot key': QtCore.Qt.Key_F2}
         wideFieldIlluminationParamDict = {'Illumination status': 'Widefield',
                                           'Detection status': None,
                                           'Flip mirror positions': [None, False, True],
-                                          'Hot key': QtCore.Qt.Key_4}
+                                          'Hot key': QtCore.Qt.Key_F5}
         lightSheetIlluminationParamDict = {'Illumination status': 'Light sheet',
                                            'Detection status': None,
                                            'Flip mirror positions': [None, True, False],
-                                           'Hot key': QtCore.Qt.Key_5}
+                                           'Hot key': QtCore.Qt.Key_F6}
         straightDetectionParamDict = {'Illumination status': None,
                                       'Detection status': 'Straight',
                                       'Flip mirror positions': [False, None, None],
-                                      'Hot key': QtCore.Qt.Key_7}
+                                      'Hot key': QtCore.Qt.Key_F9}
         tiltedDetectionParamDict = {'Illumination status': None,
                                     'Detection status': 'Tilted',
                                     'Flip mirror positions': [True, None, None],
-                                    'Hot key': QtCore.Qt.Key_8}
+                                    'Hot key': QtCore.Qt.Key_F10}
 
         self.setupConfigs = {'Widefield imaging': wideFieldParamDict,
                              'Light sheet imaging': lightSheetParamDict,
@@ -87,7 +87,7 @@ class SetupStatusController(ImConWidgetController):
 
     def keyReleased(self, event):
         if not event.isAutoRepeat():
-            self._logger.debug('Key release detected')
+            self._logger.debug('Key release detected %s' % event.key())
             for key, item in self.setupConfigs.items():
                 if event.key() == item['Hot key']:
                     self.setConfig(item)

@@ -6,6 +6,7 @@ class CommunicationChannel(SignalInterface):
     Communication Channel is a class that handles the communication between Master Controller
     and Widgets, or between Widgets.
     """
+    sigNewDataAddedFromModule = Signal()
 
     sigDataStackingChanged = Signal(int, int)
 

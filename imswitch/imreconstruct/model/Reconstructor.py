@@ -2,6 +2,7 @@
 import numpy as np
 import cupy as cp
 from cupyx.scipy import signal as cpsig
+from cupyx.scipy.ndimage import affine_transform
 from numba import cuda
 
 from imswitch.imcommon.model import dirtools, initLogger
@@ -132,6 +133,17 @@ class Reconstructor:
             interpolatedHtFromOnes = cpsig.fftconvolve(invTransfOnes, cupy_kernel, mode='same').clip(
                 0.1)  # Avoid divide by zero
             reconstructed = cp.asnumpy(cp.divide(interpolatedData, interpolatedHtFromOnes))
+        except cp.cuda.memory.OutOfMemoryError:
+            self.__logger.warning('Out of memory, trying ndi affine transform')
+            mempool.free_all_blocks()
+            try:
+                affine_transform(adjustedData, cp.linalg.inv(M), offset=0.0, output_shape=recon_canvas.shape,
+                                       output=recon_canvas, order=3, mode='constant', cval=0.0, prefilter=True,
+                                       texture_memory=False)
+                self.__logger.warning('Performed ndi affine transform')
+                return cp.asnumpy(recon_canvas)
+            except:
+                return None
         finally:
             mempool.free_all_blocks()
 
