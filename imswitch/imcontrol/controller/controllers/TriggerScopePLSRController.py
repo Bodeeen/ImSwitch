@@ -161,8 +161,8 @@ class TriggerScopePLSRController(ImConWidgetController):
         scanParameterDict['roStartV'] = self._scanParameterDict['roStartPosUm'] / roConvFactor
         scanParameterDict['roStepSizeV'] = self._scanParameterDict['roStepSizeUm'] / roConvFactor
         scanParameterDict['roSteps'] = int(self._scanParameterDict['roSteps'])
-        scanParameterDict['cycleStartV'] = self._scanParameterDict['cycleStartPosUm'] / cycleConvFactor
-        scanParameterDict['cycleStepSizeV'] = self._scanParameterDict['cycleStepSizeUm'] / cycleConvFactor
+        scanParameterDict['cycleStartV'] = self._scanParameterDict['cycleStartPosUm'] / roConvFactor
+        scanParameterDict['cycleStepSizeV'] = self._scanParameterDict['cycleStepSizeUm'] / roConvFactor
         scanParameterDict['cycleSteps'] = int(self._scanParameterDict['cycleSteps'])
 
         pLSRParameterDict = {'deviceParameters': deviceParameterDict, 'scanParameters': scanParameterDict}
