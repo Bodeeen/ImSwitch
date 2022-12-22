@@ -89,7 +89,7 @@ class ImRecMainView(QtWidgets.QMainWindow):
 
         self.parTree = ReconParTree()
 
-        self.parTree.p.param('Autoreconstruct data from module').setValue(True)
+        self.parTree.p.param('Autoreconstruct data from module').setValue(False)
         self.parTree.p.param('Reconstruction options').param('Restack before deskewing').setValue(True)
 
         self.pickDatasetsDialog = PickDatasetsDialog(self, allowMultiSelect=True)

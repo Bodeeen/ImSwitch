@@ -68,8 +68,10 @@ class TriggerScopePLSRWidget(Widget):
 
         roScanDeviceLabel = QtWidgets.QLabel('RO scan device')
         self.roScanDeviceEdit = guitools.BetterComboBox(allowScrollChanges=False)
-        cycleScanDeviceLabel = QtWidgets.QLabel('Cycle scan device')
+        cycleScanDeviceLabel = QtWidgets.QLabel('Cycle scan device is now hard coded same as RO-device')
         self.cycleScanDeviceEdit = guitools.BetterComboBox(allowScrollChanges=False)
+        #Temp fix
+        self.cycleScanDeviceEdit.setEnabled(False)
 
         delayBeforeOnLabel = QtWidgets.QLabel('Delay before on-pulse (in consecutive cycles) (ms)')
         self.delayBeforeOnEdit = guitools.BetterDoubleSpinBox(allowScrollChanges=False)

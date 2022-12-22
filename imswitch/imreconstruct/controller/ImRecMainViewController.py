@@ -286,7 +286,7 @@ class ImRecMainViewController(ImRecWidgetController):
         self._logger.debug(f'Trying to save to: {filePath}, Vx size: {self._widget.getReconstructionVxSize(), self._widget.getReconstructionVxSize(), self._widget.getReconstructionVxSize()},'
                            f' dt: -')
         # Reconstructed image
-        reconstrData = copy.deepcopy(reconObj.getReconstruction())
+        reconstrData = copy.deepcopy(reconObj.getReconstruction()) #Not good for memory limitations
         reconstrData = np.array([reconstrData])
         reconstrData = np.swapaxes(reconstrData, 1, 2)
         tiff.imwrite(filePath, reconstrData.astype(np.float32),

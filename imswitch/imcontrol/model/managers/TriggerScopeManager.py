@@ -211,6 +211,7 @@ class TriggerScopeManager(SignalInterface):
 
 class SerialMonitor(Worker):
     sigScanDone = Signal()
+    sigTrigMSG = Signal(int)
     sigUnknownMessage = Signal(str)
 
     def __init__(self, rs232Manager, updatePeriod):
@@ -241,6 +242,9 @@ class SerialMonitor(Worker):
         if msg != None:
             if msg == 'Scan done':
                 self.sigScanDone.emit()
+            elif msg[:3] == 'MSG':
+                msgID = int(msg[3:])
+                self.sigTrigMSG.emit(msgID)
             else:
                 self.sigUnknownMessage.emit(msg)
 
