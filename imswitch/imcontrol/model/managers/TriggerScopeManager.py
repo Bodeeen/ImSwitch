@@ -106,22 +106,6 @@ class TriggerScopeManager(SignalInterface):
         for key, value in scanParameters.items():
             self.setParameter(key, value)
 
-        # self.setParameter('timeLapsePoints', scanParameters['timeLapsePoints'])
-        # self.setParameter('timeLapseDelayUs', scanParameters['timeLapseDelayUs'])
-        # self.setParameter('delayBeforeOnUs', scanParameters['delayBeforeOnUs'])
-        # self.setParameter('onPulseTimeUs', scanParameters['onPulseTimeUs'])
-        # self.setParameter('delayAfterOnUs', scanParameters['delayAfterOnUs'])
-        # self.setParameter('offPulseTimeUs', scanParameters['offPulseTimeUs'])
-        # self.setParameter('delayAfterOffUs', scanParameters['delayAfterOffUs'])
-        # self.setParameter('delayAfterDACStepUs', scanParameters['delayAfterDACStepUs'])
-        # self.setParameter('roPulseTimeUs', scanParameters['roPulseTimeUs'])
-        # self.setParameter('roRestingV', scanParameters['roRestingV'])
-        # self.setParameter('roStartV', scanParameters['roStartV'])
-        # self.setParameter('roStepSizeV', scanParameters['roStepSizeV'])
-        # self.setParameter('roSteps', scanParameters['roSteps'])
-        # self.setParameter('cycleStartV', scanParameters['cycleStartV'])
-        # self.setParameter('cycleStepSizeV', scanParameters['cycleStepSizeV'])
-        # self.setParameter('cycleSteps', scanParameters['cycleSteps'])
 
         self.__logger.debug('Parameters set')
         self.send('pLS-RESOLFT_SCAN')

@@ -19,6 +19,30 @@ class Reconstructor:
     def __init__(self):
         self.__logger = initLogger(self)
 
+    def getReconstructionSize(self, dataShape, cam_px_size, alpha_rad, dy_step_size, recon_vx_size):
+        """Get size of reconstruction, this is just a very ugly temp solution"""
+
+        camera_offset = 100
+
+        """Make coordiate transformation matrix such that sampleCoordinates = M * dataCoordinates"""
+        transformation_mat = cp.array([[cam_px_size * np.sin(alpha_rad), 0, 0],
+                                       [cam_px_size * np.cos(alpha_rad), dy_step_size, 0],
+                                       [0, 0, cam_px_size]])
+        voxelize_scale_mat = cp.array(
+            [[1 / recon_vx_size, 0, 0], [0, 1 / recon_vx_size, 0], [0, 0, 1 / recon_vx_size]])
+
+        M = cp.matmul(voxelize_scale_mat, transformation_mat)
+
+        """Reshape data"""
+        permuted_axis = np.array([1, 0, 2])
+        size_data = dataShape[permuted_axis]
+        """Calculate reconstruction canvas size"""
+        cp_size_data = cp.array(size_data)
+        cp_size_sample = cp.ceil(cp.matmul(M, cp_size_data)).astype(int)
+        size_sample = cp.asnumpy(cp_size_sample)
+
+        return size_sample
+
     def simpleDeskew(self, data, cam_px_size, alpha_rad, dy_step_size, recon_vx_size):
         """Deskew the data in one step transform"""
 

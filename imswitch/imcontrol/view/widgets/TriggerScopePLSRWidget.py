@@ -89,6 +89,8 @@ class TriggerScopePLSRWidget(Widget):
         self.delayAfterDACStepEdit = guitools.BetterDoubleSpinBox(allowScrollChanges=False)
         roTimeLabel = QtWidgets.QLabel('RO-pulse time (ms)')
         self.roTimeEdit = guitools.BetterDoubleSpinBox(allowScrollChanges=False)
+        delayAfterRoLabel = QtWidgets.QLabel('Delay after RO-pulse (ms)')
+        self.delayAfterRoEdit = guitools.BetterDoubleSpinBox(allowScrollChanges=False)
 
         roRestingPosUmLabel = QtWidgets.QLabel('RO scan resting position (um)')
         self.roRestingPosUmEdit = guitools.BetterDoubleSpinBox(allowScrollChanges=False)
@@ -192,6 +194,9 @@ class TriggerScopePLSRWidget(Widget):
         self.grid.addWidget(cycleStepsLabel, currentRow, 2)
         self.grid.addWidget(self.cycleStepsEdit, currentRow, 3)
         currentRow += 1
+        self.grid.addWidget(delayAfterRoLabel, currentRow, 0)
+        self.grid.addWidget(self.delayAfterRoEdit, currentRow, 1)
+        currentRow += 1
         self.grid.addItem(
             QtWidgets.QSpacerItem(40, 20,
                                   QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding),
@@ -269,7 +274,10 @@ class TriggerScopePLSRWidget(Widget):
 
     def setRoTimeMs(self, value):
         self.roTimeEdit.setValue(value)
-
+    def getDelayAfterRoMs(self):
+        return self.delayAfterRoEdit.value()
+    def setDelayAfterRoMs(self, value):
+        self.delayAfterRoEdit.setValue(value)
     def getRoRestingPosUm(self):
         return self.roRestingPosUmEdit.value()
 

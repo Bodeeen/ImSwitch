@@ -69,7 +69,7 @@ class BSC203Controller(ImConWidgetController):
         self.initialize()
         self.getPosUpdateInterv_ms = 100
 
-        """Mouse move veriables"""
+        """Mouse move variables"""
         self.initMousePos = None
         self.initMouseWheelPos = self.initialZPos_mm
         self.um_per_pixel = 10
@@ -227,10 +227,10 @@ class BSC203Controller(ImConWidgetController):
             elif event.key() == QtCore.Qt.Key_Down:
                 print('Down key pressed')
                 self.move_constant(False, Ychan)
-            elif event.key() == QtCore.Qt.Key_Plus:
+            elif event.key() == QtCore.Qt.Key_Q:
                 print('Plus key pressed')
                 self.move_constant(True, Zchan)
-            elif event.key() == QtCore.Qt.Key_Minus:
+            elif event.key() == QtCore.Qt.Key_A:
                 print('Minus key pressed')
                 self.move_constant(False, Zchan)
 
@@ -244,8 +244,8 @@ class BSC203Controller(ImConWidgetController):
             if (event.key() == QtCore.Qt.Key_Up or event.key() == QtCore.Qt.Key_Down):
                 print('Up/Down key released')
                 self.stop(Ychan)
-            if (event.key() == QtCore.Qt.Key_Plus or event.key() == QtCore.Qt.Key_Minus):
-                print('Up/Down key released')
+            if (event.key() == QtCore.Qt.Key_A or event.key() == QtCore.Qt.Key_Q):
+                print('A/Q key released')
                 self.stop(Zchan)
 
     def wheelMoved(self, event):

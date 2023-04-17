@@ -30,6 +30,26 @@ class HamamatsuManager(DetectorManager):
 
         model = self._camera.camera_model.decode('utf-8')
 
+        # Set model specific parameters
+        if model == 'C15550-20UP': # Quest
+            self.ReadOutModes = {'Ultra quiet': 1, 'Standard': 2}
+        elif model == 'C16240-20UP': #Fire
+            self.ReadOutModes = {}
+        elif model == 'C14440-20UP': #Fusion
+            self.ReadOutModes = {'Ultra quiet': 1, 'Standard': 2, 'Fast scan': 3}
+        else:
+            self.ReadOutModes = {'One': 1, 'Two': 2}
+
+        # Set output trigger polarity to positive
+        self._camera.setPropertyValue('output_trigger_polarity[0]', 2)
+
+        #Could use camera.isCameraProperty() somwhere here also
+        if self.ReadOutModes:
+            RO_speed_value = self._camera.getPropertyValue('readout_speed')[0]
+            RO_mode = list(self.ReadOutModes.keys())[list(self.ReadOutModes.values()).index(RO_speed_value)]
+        else:
+            self.ReadOutModes  ={'N/A': None}
+            RO_mode = 'N/A'
         # Prepare parameters
         parameters = {
             'Set exposure time': DetectorNumberParameter(group='Timings', value=0,
@@ -47,6 +67,10 @@ class HamamatsuManager(DetectorManager):
                                                     options=['Internal trigger',
                                                              'External "start-trigger"',
                                                              'External "frame-trigger"'],
+                                                    editable=True),
+            'Read-out mode': DetectorListParameter(group='Acquisition mode',
+                                                    value=RO_mode,
+                                                    options=list(self.ReadOutModes.keys()),
                                                     editable=True),
             'Camera pixel size': DetectorNumberParameter(group='Miscellaneous', value=0.1,
                                                          valueUnits='µm', editable=True)
@@ -92,6 +116,7 @@ class HamamatsuManager(DetectorManager):
         self._frameStart = (hpos, vpos)
         # Only place self.shapes is changed
         self._shape = (hsize, vsize)
+        self._updatePropertiesFromCamera()
 
     def setBinning(self, binning):
         super().setBinning(binning)
@@ -109,9 +134,11 @@ class HamamatsuManager(DetectorManager):
         if name == 'Set exposure time':
             self._setExposure(value)
             self._updatePropertiesFromCamera()
+        elif name == 'Read-out mode':
+            self._setReadOutMode(value)
+            self._updatePropertiesFromCamera()
         elif name == 'Trigger source':
             self._setTriggerSource(value)
-
         return self.parameters
 
     def startAcquisition(self):
@@ -123,6 +150,10 @@ class HamamatsuManager(DetectorManager):
     def _setExposure(self, time):
         self._camera.setPropertyValue('exposure_time', time)
 
+    def _setReadOutMode(self, mode):
+        self._performSafeCameraAction(
+            lambda: self._camera.setPropertyValue('readout_speed', self.ReadOutModes[mode])
+        )
     def _setTriggerSource(self, source):
         if source == 'Internal trigger':
             self._performSafeCameraAction(

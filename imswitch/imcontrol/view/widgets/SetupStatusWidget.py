@@ -31,12 +31,12 @@ class SetupStatusWidget(Widget):
         self.detHK1info = QtWidgets.QLabel('Set detection to straight:')
         self.detHK2info = QtWidgets.QLabel('Set detection to tilted:')
 
-        self.illDetHK1 = QtWidgets.QLabel('1')
-        self.illDetHK2 = QtWidgets.QLabel('2')
-        self.illHK1 = QtWidgets.QLabel('4')
-        self.illHK2 = QtWidgets.QLabel('5')
-        self.detHK1 = QtWidgets.QLabel('7')
-        self.detHK2 = QtWidgets.QLabel('8')
+        self.illDetHK1 = QtWidgets.QLabel('F1')
+        self.illDetHK2 = QtWidgets.QLabel('F2')
+        self.illHK1 = QtWidgets.QLabel('F5')
+        self.illHK2 = QtWidgets.QLabel('F6')
+        self.detHK1 = QtWidgets.QLabel('F9')
+        self.detHK2 = QtWidgets.QLabel('F10')
 
         grid = QtWidgets.QGridLayout()
         self.setLayout(grid)

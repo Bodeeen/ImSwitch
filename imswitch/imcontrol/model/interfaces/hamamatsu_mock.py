@@ -97,7 +97,8 @@ class MockHamamatsu(Driver):
                            'internal_frame_rate': 10,
                            'internal_frame_interval': 10,
                            'trigger_source': 1,
-                           'trigger_mode': 1}
+                           'trigger_mode': 1,
+                           'readout_speed': 2}
 
         # Get camera max width, height.
         self.max_width = self.getPropertyValue("image_width")[0]

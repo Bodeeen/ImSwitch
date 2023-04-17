@@ -123,6 +123,7 @@ class TriggerScopePLSRController(ImConWidgetController):
             self._widget.setDelayAfterOffTimeMs(self._scanParameterDict['delayAfterOffTimeMs'])
             self._widget.setDelayAfterDACStepMs(self._scanParameterDict['delayAfterDACStepMs'])
             self._widget.setRoTimeMs(self._scanParameterDict['roTimeMs'])
+            self._widget.setDelayAfterRoMs(self._scanParameterDict['delayAfterRoMs'])
             self._widget.setRoRestingPosUm(self._scanParameterDict['roRestingPosUm'])
             self._widget.setRoStartPosUm(self._scanParameterDict['roStartPosUm'])
             self._widget.setRoStepSizeUm(self._scanParameterDict['roStepSizeUm'])
@@ -157,6 +158,7 @@ class TriggerScopePLSRController(ImConWidgetController):
         scanParameterDict['delayAfterOnUs'] = int(self._scanParameterDict['delayAfterOnTimeMs'] * 1000)
         scanParameterDict['delayAfterOffUs'] = int(self._scanParameterDict['delayAfterOffTimeMs'] * 1000)
         scanParameterDict['delayAfterDACStepUs'] = int(self._scanParameterDict['delayAfterDACStepMs'] * 1000)
+        scanParameterDict['delayAfterRoUs'] = int(self._scanParameterDict['delayAfterRoMs'] * 1000)
         scanParameterDict['roRestingV'] = self._scanParameterDict['roRestingPosUm'] / roConvFactor
         scanParameterDict['roStartV'] = self._scanParameterDict['roStartPosUm'] / roConvFactor
         scanParameterDict['roStepSizeV'] = self._scanParameterDict['roStepSizeUm'] / roConvFactor
@@ -178,6 +180,9 @@ class TriggerScopePLSRController(ImConWidgetController):
     def runScanAdvanced(self, *, recalculateSignals=True, isNonFinalPartOfSequence=False,
                         sigScanStartingEmitted):
         """ Runs a scan with the set scanning parameters. """
+        #Temp safety fix
+        # if self._widget.timeLapsePointsEdit.value() * self._widget.timeLapseDelayEdit.value() > 60:
+
         try:
             self._widget.setScanButtonChecked(True)
             self.isRunning = True
@@ -229,6 +234,7 @@ class TriggerScopePLSRController(ImConWidgetController):
         self._scanParameterDict['delayAfterOffTimeMs'] = self._widget.getDelayAfterOffTimeMs()
         self._scanParameterDict['delayAfterDACStepMs'] = self._widget.getDelayAfterDACStepMs()
         self._scanParameterDict['roTimeMs'] = self._widget.getRoTimeMs()
+        self._scanParameterDict['delayAfterRoMs'] = self._widget.getDelayAfterRoMs()
         self._scanParameterDict['roRestingPosUm'] = self._widget.getRoRestingPosUm()
         self._scanParameterDict['roStartPosUm'] = self._widget.getRoStartPosUm()
         self._scanParameterDict['roStepSizeUm'] = self._widget.getRoStepSizeUm()

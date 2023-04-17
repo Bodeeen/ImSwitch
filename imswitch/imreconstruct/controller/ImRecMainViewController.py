@@ -174,9 +174,17 @@ class ImRecMainViewController(ImRecWidgetController):
                     data = np.mean(reshaped, axis=0)
                     timepoints = 1
 
+                cycles = self._widget.getCycles()
+                planes_in_cycle = self._widget.getPlanesInCycle()
+                dataShape_tp = np.array([cycles*planes_in_cycle, data.shape[1], data.shape[2]])
+                reconstructionSize = self._reconstructor.getReconstructionSize(dataShape_tp, self._widget.getPixelSizeNm(),
+                                                                             self._widget.getSkewAngleRad(),
+                                                                             self._widget.getDeltaY(),
+                                                                             self._widget.getReconstructionVxSize())
+
+                reconObj.allocateReconstruction(timepoints, reconstructionSize)
+
                 for tp in range(timepoints):
-                    cycles = self._widget.getCycles()
-                    planes_in_cycle = self._widget.getPlanesInCycle()
                     """Restack data"""
                     slices = cycles * planes_in_cycle
                     tp_data = data[tp*slices:(tp + 1)*slices]
@@ -189,12 +197,14 @@ class ImRecMainViewController(ImRecWidgetController):
                             self._logger.warning('Data shape does not match given restacking parameters')
                     else:
                         restacked = tp_data
+                    if self._widget.getPosScanDirection():
+                        restacked = np.flip(restacked, 0)
                     self._logger.debug('Reconstructing data tp: %s' % tp)
                     recon = self._reconstructor.simpleDeskew(restacked, self._widget.getPixelSizeNm(),
                                                              self._widget.getSkewAngleRad(),
                                                              self._widget.getDeltaY(),
                                                              self._widget.getReconstructionVxSize())
-                    reconObj.addReconstructionTimepoint(recon)
+                    reconObj.addReconstructionTimepoint(tp, recon)
 
             finally:
                 if not preloaded:
@@ -286,13 +296,15 @@ class ImRecMainViewController(ImRecWidgetController):
         self._logger.debug(f'Trying to save to: {filePath}, Vx size: {self._widget.getReconstructionVxSize(), self._widget.getReconstructionVxSize(), self._widget.getReconstructionVxSize()},'
                            f' dt: -')
         # Reconstructed image
-        reconstrData = copy.deepcopy(reconObj.getReconstruction()) #Not good for memory limitations
+        reconstrData = reconObj.getReconstruction() #Not good for memory limitations
         reconstrData = np.array([reconstrData])
         reconstrData = np.swapaxes(reconstrData, 1, 2)
-        tiff.imwrite(filePath, reconstrData.astype(np.float32),
+        tiff.imwrite(filePath, reconstrData,
                      imagej=True, resolution=(1 / self._widget.getReconstructionVxSize(), 1 / self._widget.getReconstructionVxSize()),
                      metadata={'spacing': self._widget.getReconstructionVxSize(), 'unit': 'nm', 'axes': 'TZCYX'})
-
+        """Reshape back to original, since we do not deep copy from reconObj"""
+        reconstrData = np.swapaxes(reconstrData, 1, 2)
+        reconstrData = reconstrData[0]
     def saveCoefficients(self, reconObj, filePath):
         coeffs = copy.deepcopy(reconObj.getCoeffs())
         self._logger.debug(f'Shape of coeffs: {coeffs.shape}')

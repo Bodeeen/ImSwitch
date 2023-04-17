@@ -182,6 +182,10 @@ class ImRecMainView(QtWidgets.QMainWindow):
 
     def getCycles(self):
         return self.parTree.p.param('Acquisition parameters').param('Cycles').value()
+
+    def getPosScanDirection(self):
+        return self.parTree.p.param('Acquisition parameters').param('Positive scan direction').value()
+
     def getPlanesInCycle(self):
         return self.parTree.p.param('Acquisition parameters').param('Planes in cycle').value()
     def getTimepoints(self):
@@ -218,6 +222,7 @@ class ReconParTree(ParameterTree):
                 {'name': 'Skew angle', 'type': 'float', 'value': 35, 'limits': (0, 9999)},
                 {'name': 'Cycles', 'type': 'int', 'value': 10, 'limits': (0, 9999)},
                 {'name': 'Planes in cycle', 'type': 'int', 'value': 20, 'limits': (0, 9999)},
+                {'name': 'Positive scan direction', 'type': 'bool'},
                 {'name': 'Timepoints', 'type': 'int', 'value': 1, 'limits': (0, 9999)}]},
             {'name': 'Reconstruction options', 'type': 'group', 'children': [
                 {'name': 'Reconstruction vx size', 'type': 'float', 'value': 100, 'limits': (0, 9999),

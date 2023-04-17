@@ -15,15 +15,19 @@ class ReconObj:
 
         self.dispLevels = None
 
-    def setReconstruction(self, reconstruction):
-        self.reconstructed = np.array([reconstruction])
 
-    def addReconstructionTimepoint(self, new_reconstruction):
+    def allocateReconstruction(self, timepoints, size):
+        self._reconSize = size
+        arraySize = np.insert(size, 0, timepoints)
+        self.reconstructed = np.zeros(arraySize, dtype='float32')
+
+    def setReconstruction(self, reconstruction):
+        #Here one could maybe preallocate an array big enough for all timepoints
+        self.reconstructed = np.array([reconstruction], dtype='float32')
+
+    def addReconstructionTimepoint(self, timepoint, new_reconstruction):
         if not new_reconstruction is None:
-            if self.reconstructed is None:
-                self.setReconstruction(new_reconstruction)
-            elif self.reconstructed.shape[1::] == new_reconstruction.shape:
-                self.reconstructed = np.append(self.reconstructed, np.array([new_reconstruction]), axis=0)
+            self.reconstructed[timepoint] = new_reconstruction
             self.__logger.debug('Added timepoint, ndim of reconstruction is %s', self.reconstructed.ndim)
         else:
             self.__logger.warning('Tried to add reconstruction that is None')
