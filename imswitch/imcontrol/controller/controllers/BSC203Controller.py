@@ -25,6 +25,7 @@ be installed. In other words, the BBD203 “3 channel” controller actually has
 
 
 """
+From manual of thorlabs
 How to calculate the linear displacement per microstep
 The stepper motor used in the DRV001 actuator has 200 full steps per revolution of the motor. Each full step is broken down into 2048 microsteps. There are
 409,600 microsteps per revolution of the motor when using the BSC201 controller. The end result is the leadscrew advances by 0.5 mm. To calculate the linear

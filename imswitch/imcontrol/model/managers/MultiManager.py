@@ -13,6 +13,7 @@ class MultiManager(ABC):
         self._subManagers = {}
         currentPackage = '.'.join(__name__.split('.')[:-1])
         for managedDeviceName, managedDeviceInfo in managedDeviceInfos.items():
+            print(managedDeviceName)
             # Create sub-manager
             package = importlib.import_module(
                 pythontools.joinModulePath(f'{currentPackage}.{subManagersPackage}',

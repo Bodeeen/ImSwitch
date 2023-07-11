@@ -3,6 +3,7 @@ from qtpy import QtCore
 from ..basecontrollers import ImConWidgetController
 from serial.serialutil import SerialException
 
+
 class SetupStatusController(ImConWidgetController):
     sigViewTiltedCamera = QtCore.Signal()
     sigViewStraightCamera = QtCore.Signal()
@@ -13,11 +14,14 @@ class SetupStatusController(ImConWidgetController):
         self.tiltedCamName = 'Orca' #Names in imageWidget set in config file
         self.straightCamName = 'WidefieldCamera'
 
+        self._elliptecSliderManger = self._master.rs232sManager['elliptecSlider']
+        self._rotationStageManager = self._master.rs232sManager['rotationStage']
+
         try:
             self.flipMirrors = [APTDevice_Motor(serial_port=port) for port in flipMirrorCOMs]
             self._logger.debug('Initlalizes devices in SetupStatusController')
         except:
-            self._logger.warning('Could not initlalize devices in SetupStatusController')
+            self._logger.warning('Could not initlalize flip mirrors in SetupStatusController')
             self._widget.setEnabled(False)
 
         """Define configurations"""
@@ -57,8 +61,33 @@ class SetupStatusController(ImConWidgetController):
         #Connect keyboard/mouse signals
         self._commChannel.sigKeyReleased.connect(self.keyReleased)
 
+        #Connect widget signals
+        self._widget.rotationStagePosEdit.editingFinished.connect(self.setRotationStagePosFromEdit)
+        self._widget.jogStepSizeEdit.editingFinished.connect(self.setRotationJogStepSizeFromEdit)
+        self._widget.jogPositiveButton.clicked.connect(lambda: self._rotationStageManager.jog(True))
+        self._widget.jogNegativeButton.clicked.connect(lambda: self._rotationStageManager.jog(False))
         #Set to initial position
         self.setConfig(self.setupConfigs['Widefield imaging'])
+
+        #Timer for getting stage positions
+        self.timer = QtCore.QTimer()
+        self.timer.timeout.connect(self.getPositions)
+        self.timer.start(100)
+
+
+    def setRotationJogStepSizeFromEdit(self):
+        newStepSize = self._widget.jogStepSizeEdit.value()
+        self._rotationStageManager.setJogDistanceInUnits(newStepSize)
+    def setRotationStagePosFromEdit(self):
+        newPos = self._widget.rotationStagePosEdit.value()
+        self.setRotationStagePos(newPos)
+
+    def setRotationStagePos(self, pos):
+        self._logger.debug('Setting rotation state position')
+        self._rotationStageManager.moveToInUnits(pos)
+
+    def getPositions(self):
+        self._widget.currentPosOfRotationStageDisp.setText(str(self._rotationStageManager.getPositionInUnits()))
 
     def setConfig(self, configurationPars: dict):
         try:
@@ -91,3 +120,11 @@ class SetupStatusController(ImConWidgetController):
             for key, item in self.setupConfigs.items():
                 if event.key() == item['Hot key']:
                     self.setConfig(item)
+            if event.key() == QtCore.Qt.Key_1:
+                    self._elliptecSliderManger.moveToPosition(0)
+            if event.key() == QtCore.Qt.Key_2:
+                    self._elliptecSliderManger.moveToPosition(1)
+            if event.key() == QtCore.Qt.Key_3:
+                    self._elliptecSliderManger.moveToPosition(2)
+            if event.key() == QtCore.Qt.Key_4:
+                    self._elliptecSliderManger.moveToPosition(3)

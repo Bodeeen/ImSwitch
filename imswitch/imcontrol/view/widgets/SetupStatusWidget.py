@@ -1,5 +1,6 @@
 from qtpy import QtCore, QtGui, QtWidgets
 from .basewidgets import Widget
+from imswitch.imcontrol.view import guitools
 
 class SetupStatusWidget(Widget):
     def __init__(self, *args, **kwargs):
@@ -21,6 +22,28 @@ class SetupStatusWidget(Widget):
         self.detectionStatusLabel.setFont(QtGui.QFont('Calibri', 14))
         self.detectionStatusLabel.setStyleSheet("font-weight: bold")
 
+        """Rotation stage"""
+        self.rotationStageHeader = QtWidgets.QLabel('Rotation stage')
+        self.rotationStageHeader.setFont(QtGui.QFont('Calibri', 14))
+        self.rotationStageHeader.setStyleSheet("font-weight: bold")
+
+        self.rotationStagePosLabel = QtWidgets.QLabel('Set position (deg) of rotation stage')
+        self.rotationStagePosEdit = guitools.BetterDoubleSpinBox()
+        self.rotationStagePosEdit.setDecimals(4)
+        self.rotationStagePosEdit.setMaximum(360)
+        self.rotationStagePosEdit.setSingleStep(0.01)
+        self.jogStepSizeLabel = QtWidgets.QLabel('Set jog step size (deg)')
+        self.jogStepSizeEdit = guitools.BetterDoubleSpinBox()
+        self.jogStepSizeEdit.setDecimals(4)
+        self.jogStepSizeEdit.setMaximum(360)
+        self.jogStepSizeEdit.setSingleStep(0.01)
+        self.jogPositiveButton = guitools.BetterPushButton('>>')
+        self.jogNegativeButton = guitools.BetterPushButton('<<')
+        self.currentPosOfRotationStageLabel = QtWidgets.QLabel('Current position (deg) of rotation stage')
+        self.currentPosOfRotationStageDisp = QtWidgets.QLabel('')
+
+
+        """Hot key info"""
         self.hotKeyInfo = QtWidgets.QLabel('Hot keys for setting status:')
         self.hotKeyInfo.setFont(QtGui.QFont('Calibri', 14))
         self.hotKeyInfo.setStyleSheet("font-weight: bold")
@@ -50,19 +73,42 @@ class SetupStatusWidget(Widget):
                                   QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Expanding),
             1, 0
         )
-        grid.addWidget(self.hotKeyInfo, 2, 0, 1, 2)
-        grid.addWidget(self.illDetHK1info, 3, 0, 1, 1)
-        grid.addWidget(self.illDetHK1, 3, 1, 1, 1)
-        grid.addWidget(self.illDetHK2info, 4, 0, 1, 1)
-        grid.addWidget(self.illDetHK2, 4, 1, 1, 1)
-        grid.addWidget(self.illHK1info, 5, 0, 1, 1)
-        grid.addWidget(self.illHK1, 5, 1, 1, 1)
-        grid.addWidget(self.illHK2info, 6, 0, 1, 1)
-        grid.addWidget(self.illHK2, 6, 1, 1, 1)
-        grid.addWidget(self.detHK1info, 7, 0, 1, 1)
-        grid.addWidget(self.detHK1, 7, 1, 1, 1)
-        grid.addWidget(self.detHK2info, 8, 0, 1, 1)
-        grid.addWidget(self.detHK2, 8, 1, 1, 1)
+        currentRow = 2
+        grid.addWidget(self.rotationStageHeader, currentRow, 0)
+        currentRow += 1
+        grid.addWidget(self.rotationStagePosLabel, currentRow, 0, 1, 1)
+        grid.addWidget(self.rotationStagePosEdit, currentRow, 1, 1, 1)
+        currentRow += 1
+        grid.addWidget(self.jogStepSizeLabel, currentRow, 0, 1, 1)
+        grid.addWidget(self.jogStepSizeEdit, currentRow, 1, 1, 1)
+        currentRow += 1
+        grid.addWidget(self.jogNegativeButton, currentRow, 0, 1, 1)
+        grid.addWidget(self.jogPositiveButton, currentRow, 1, 1, 1)
+        currentRow += 1
+        grid.addWidget(self.currentPosOfRotationStageLabel, currentRow, 0, 1, 1)
+        grid.addWidget(self.currentPosOfRotationStageDisp, currentRow, 1, 1, 1)
+        currentRow += 1
+
+        grid.addWidget(self.hotKeyInfo, currentRow, 0, 1, 2)
+        currentRow += 1
+        grid.addWidget(self.illDetHK1info, currentRow, 0, 1
+                       , 1)
+        grid.addWidget(self.illDetHK1, currentRow, 1, 1, 1)
+        currentRow += 1
+        grid.addWidget(self.illDetHK2info, currentRow, 0, 1, 1)
+        grid.addWidget(self.illDetHK2, currentRow, 1, 1, 1)
+        currentRow += 1
+        grid.addWidget(self.illHK1info, currentRow, 0, 1, 1)
+        grid.addWidget(self.illHK1, currentRow, 1, 1, 1)
+        currentRow += 1
+        grid.addWidget(self.illHK2info, currentRow, 0, 1, 1)
+        grid.addWidget(self.illHK2, currentRow, 1, 1, 1)
+        currentRow += 1
+        grid.addWidget(self.detHK1info, currentRow, 0, 1, 1)
+        grid.addWidget(self.detHK1, currentRow, 1, 1, 1)
+        currentRow += 1
+        grid.addWidget(self.detHK2info, currentRow+8, 0, 1, 1)
+        grid.addWidget(self.detHK2, currentRow+8, 1, 1, 1)
 
         # self.setFocusPolicy(QtCore.Qt.StrongFocus)
 

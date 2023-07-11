@@ -87,6 +87,13 @@ class RS232Info:
     managerProperties: Dict[str, Any]
     """ Properties to be read by the RS232 manager. """
 
+@dataclass(frozen=True)
+class serialInfo:
+    managerName: str
+    """ Serial manager class name. """
+
+    managerProperties: Dict[str, Any]
+    """ Properties to be read by the serial manager. """
 
 @dataclass(frozen=True)
 class SLMInfo:
