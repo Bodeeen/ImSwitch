@@ -40,6 +40,10 @@ class CommunicationChannel(SignalInterface):
 
     sigRemoveItemFromVb = Signal(object)  # (item)
 
+    sigStartRecording = Signal()
+
+    sigStopRecording = Signal()
+
     sigRecordingStarted = Signal()
 
     sigRecordingEnded = Signal()

@@ -12,7 +12,7 @@ class TriggerScopePLSRWidget(Widget):
     sigSaveScanClicked = QtCore.Signal()
     sigLoadScanClicked = QtCore.Signal()
     sigRunScanClicked = QtCore.Signal()
-
+    sigParameterChanged = QtCore.Signal()
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -32,8 +32,13 @@ class TriggerScopePLSRWidget(Widget):
         self.saveScanBtn = guitools.BetterPushButton('Save Scan')
         self.loadScanBtn = guitools.BetterPushButton('Load Scan')
 
-        self.scanPar = {}
 
+        autoStartRecLabel = QtWidgets.QLabel('Auto-start REC')
+        autoStartRecLabel.setAlignment(QtCore.Qt.AlignRight)
+        self.autoStartRec = QtWidgets.QCheckBox()
+        autoStopRecLabel = QtWidgets.QLabel('Auto-stop REC')
+        autoStopRecLabel.setAlignment(QtCore.Qt.AlignRight)
+        self.autoStopRec = QtWidgets.QCheckBox()
         self.scanButton = guitools.BetterPushButton('Run Scan')
 
         self.scrollContainer = QtWidgets.QGridLayout()
@@ -53,72 +58,110 @@ class TriggerScopePLSRWidget(Widget):
         self.scrollContainer.addWidget(self.scrollArea)
         self.gridContainer.installEventFilter(self)
 
+        """Scan value parameters"""
+        self.scanPar = {}
+
         timeLapsePointsLabel = QtWidgets.QLabel('Time lapse timepoints')
         self.timeLapsePointsEdit = guitools.BetterSpinBox(allowScrollChanges=False)
+        self.timeLapsePointsEdit.editingFinished.connect(self.sigParameterChanged)
+
         timeLapseDelayLabel = QtWidgets.QLabel('Time lapse delay (sec)')
         self.timeLapseDelayEdit = guitools.BetterDoubleSpinBox(allowScrollChanges=False)
         self.timeLapseDelayEdit.setMaximum(1000)
-
-        onLaserLabel = QtWidgets.QLabel('On laser')
-        self.onLaserEdit = guitools.BetterComboBox(allowScrollChanges=False)
-        offLaserLabel = QtWidgets.QLabel('Off laser')
-        self.offLaserEdit = guitools.BetterComboBox(allowScrollChanges=False)
-        roLaserLabel = QtWidgets.QLabel('Read-out laser')
-        self.roLaserEdit = guitools.BetterComboBox(allowScrollChanges=False)
-
-        roScanDeviceLabel = QtWidgets.QLabel('RO scan device')
-        self.roScanDeviceEdit = guitools.BetterComboBox(allowScrollChanges=False)
-        cycleScanDeviceLabel = QtWidgets.QLabel('Cycle scan device is now hard coded same as RO-device')
-        self.cycleScanDeviceEdit = guitools.BetterComboBox(allowScrollChanges=False)
-        #Temp fix
-        self.cycleScanDeviceEdit.setEnabled(False)
+        self.timeLapseDelayEdit.editingFinished.connect(self.sigParameterChanged)
 
         delayBeforeOnLabel = QtWidgets.QLabel('Delay before on-pulse (in consecutive cycles) (ms)')
         self.delayBeforeOnEdit = guitools.BetterDoubleSpinBox(allowScrollChanges=False)
+        self.delayBeforeOnEdit.editingFinished.connect(self.sigParameterChanged)
+
         onTimeLabel = QtWidgets.QLabel('On-pulse time (ms)')
         self.onTimeEdit = guitools.BetterDoubleSpinBox(allowScrollChanges=False)
         self.onTimeEdit.setMaximum(1000)
+        self.onTimeEdit.editingFinished.connect(self.sigParameterChanged)
+
         delayAfterOnLabel = QtWidgets.QLabel('Delay after on-pulse (ms)')
         self.delayAfterOnEdit = guitools.BetterDoubleSpinBox(allowScrollChanges=False)
+        self.delayAfterOnEdit.editingFinished.connect(self.sigParameterChanged)
+
         offTimeLabel = QtWidgets.QLabel('Off-pulse time (ms)')
         self.offTimeEdit = guitools.BetterDoubleSpinBox(allowScrollChanges=False)
         self.offTimeEdit.setMaximum(1000)
+        self.offTimeEdit.editingFinished.connect(self.sigParameterChanged)
+
         delayAfterOffLabel = QtWidgets.QLabel('Delay after off-pulse (ms)')
         self.delayAfterOffEdit = guitools.BetterDoubleSpinBox(allowScrollChanges=False)
+        self.delayAfterOffEdit.editingFinished.connect(self.sigParameterChanged)
+
         delayAfterDACStepLabel = QtWidgets.QLabel('Delay after DAC step (ms)')
         self.delayAfterDACStepEdit = guitools.BetterDoubleSpinBox(allowScrollChanges=False)
+        self.delayAfterDACStepEdit.editingFinished.connect(self.sigParameterChanged)
+
         roTimeLabel = QtWidgets.QLabel('RO-pulse time (ms)')
         self.roTimeEdit = guitools.BetterDoubleSpinBox(allowScrollChanges=False)
+        self.roTimeEdit.editingFinished.connect(self.sigParameterChanged)
+
         delayAfterRoLabel = QtWidgets.QLabel('Delay after RO-pulse (ms)')
         self.delayAfterRoEdit = guitools.BetterDoubleSpinBox(allowScrollChanges=False)
+        self.delayAfterRoEdit.editingFinished.connect(self.sigParameterChanged)
 
         roRestingPosUmLabel = QtWidgets.QLabel('RO scan resting position (um)')
         self.roRestingPosUmEdit = guitools.BetterDoubleSpinBox(allowScrollChanges=False)
         self.roRestingPosUmEdit.setMinimum(-200)
         self.roRestingPosUmEdit.setMaximum(200)
+        self.roRestingPosUmEdit.editingFinished.connect(self.sigParameterChanged)
+
         roStartPosUmLabel = QtWidgets.QLabel('RO scan start (um)')
         self.roStartPosUmEdit = guitools.BetterDoubleSpinBox(allowScrollChanges=False)
         self.roStartPosUmEdit.setMinimum(-200)
         self.roStartPosUmEdit.setMaximum(200)
+        self.roStartPosUmEdit.editingFinished.connect(self.sigParameterChanged)
+
         roStepSizeUmLabel = QtWidgets.QLabel('RO scan step size (um)')
         self.roStepSizeUmEdit = guitools.BetterDoubleSpinBox(allowScrollChanges=False)
         self.roStepSizeUmEdit.setMinimum(-10)
         self.roStepSizeUmEdit.setMaximum(10)
+        self.roStepSizeUmEdit.editingFinished.connect(self.sigParameterChanged)
+
         roStepsLabel = QtWidgets.QLabel('RO scan steps')
         self.roStepsEdit = guitools.BetterSpinBox(allowScrollChanges=False)
         self.roStepsEdit.setMaximum(10000)
+        self.roStepsEdit.editingFinished.connect(self.sigParameterChanged)
+
         cycleStartPosUmLabel = QtWidgets.QLabel('Cycle scan start (um)')
         self.cycleStartPosUmEdit = guitools.BetterDoubleSpinBox(allowScrollChanges=False)
         self.cycleStartPosUmEdit.setMinimum(-200)
         self.cycleStartPosUmEdit.setMaximum(200)
+        self.cycleStartPosUmEdit.editingFinished.connect(self.sigParameterChanged)
+
         cycleStepSizeUmLabel = QtWidgets.QLabel('Cycle scan step size (um)')
         self.cycleStepSizeUmEdit = guitools.BetterDoubleSpinBox(allowScrollChanges=False)
         self.cycleStepSizeUmEdit.setMinimum(-10)
         self.cycleStepSizeUmEdit.setMaximum(10)
         self.cycleStepSizeUmEdit.setDecimals(3)
+        self.cycleStepSizeUmEdit.editingFinished.connect(self.sigParameterChanged)
+
         cycleStepsLabel = QtWidgets.QLabel('Cycle scan steps')
         self.cycleStepsEdit = guitools.BetterSpinBox(allowScrollChanges=False)
         self.cycleStepsEdit.setMaximum(1000)
+        self.cycleStepsEdit.editingFinished.connect(self.sigParameterChanged)
+
+        onLaserLabel = QtWidgets.QLabel('On laser')
+        self.onLaserEdit = guitools.BetterComboBox(allowScrollChanges=False)
+
+        offLaserLabel = QtWidgets.QLabel('Off laser')
+        self.offLaserEdit = guitools.BetterComboBox(allowScrollChanges=False)
+
+        roLaserLabel = QtWidgets.QLabel('Read-out laser')
+        self.roLaserEdit = guitools.BetterComboBox(allowScrollChanges=False)
+
+        roScanDeviceLabel = QtWidgets.QLabel('RO scan device')
+        self.roScanDeviceEdit = guitools.BetterComboBox(allowScrollChanges=False)
+
+        cycleScanDeviceLabel = QtWidgets.QLabel('Cycle scan device is now hard coded same as RO-device')
+        self.cycleScanDeviceEdit = guitools.BetterComboBox(allowScrollChanges=False)
+
+        # Temp fix
+        self.cycleScanDeviceEdit.setEnabled(False)
 
         currentRow = 0
 
@@ -142,6 +185,12 @@ class TriggerScopePLSRWidget(Widget):
                                   QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Minimum),
             currentRow, 3
         )
+        self.grid.addWidget(autoStartRecLabel, currentRow, 2)
+        self.grid.addWidget(self.autoStartRec, currentRow, 3)
+        currentRow += 1
+        self.grid.addWidget(autoStopRecLabel, currentRow, 2)
+        self.grid.addWidget(self.autoStopRec, currentRow, 3)
+        currentRow += 1
         self.grid.addWidget(self.scanButton, currentRow, 3)
         currentRow += 1
         self.grid.addItem(

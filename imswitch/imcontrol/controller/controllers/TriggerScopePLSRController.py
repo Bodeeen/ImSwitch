@@ -28,7 +28,7 @@ class TriggerScopePLSRController(ImConWidgetController):
         if not os.path.exists(self.scanDir):
             os.makedirs(self.scanDir)
 
-        self.getParameters()
+        self.updateScanParDict()
 
         self.positioners = {
             pName: pManager for pName, pManager in self._setupInfo.positioners.items()
@@ -57,6 +57,7 @@ class TriggerScopePLSRController(ImConWidgetController):
         self._widget.sigSaveScanClicked.connect(self.saveScan)
         self._widget.sigLoadScanClicked.connect(self.loadScan)
         self._widget.sigRunScanClicked.connect(self.runScan)
+        self._widget.sigParameterChanged.connect(self.updateScanParDict)
 
     def getNumScanPositions(self):
         """ Returns the number of scan positions for the configured scan. """
@@ -108,6 +109,7 @@ class TriggerScopePLSRController(ImConWidgetController):
             self._deviceParameterDict[key] = config._sections['deviceParameterDict'][key]
 
         self.setParameters()
+        self.setAllSharedAttr()
 
     def setParameters(self):
         """Set parameter fields in widget according to parameter values in parameter dictionaries"""
@@ -182,7 +184,8 @@ class TriggerScopePLSRController(ImConWidgetController):
         """ Runs a scan with the set scanning parameters. """
         #Temp safety fix
         # if self._widget.timeLapsePointsEdit.value() * self._widget.timeLapseDelayEdit.value() > 60:
-
+        if self._widget.autoStartRec:
+            self._commChannel.sigStartRecording.emit()
         try:
             self._widget.setScanButtonChecked(True)
             self.isRunning = True
@@ -212,6 +215,9 @@ class TriggerScopePLSRController(ImConWidgetController):
         if not self.doingNonFinalPartOfSequence:
             self._widget.setScanButtonChecked(False)
             self.emitScanSignal(self._commChannel.sigScanEnded)
+
+        if self._widget.autoStopRec:
+            self._commChannel.sigStopRecording.emit()
 
     def scanFailed(self):
         self._logger.error('Scan failed')
@@ -257,12 +263,38 @@ class TriggerScopePLSRController(ImConWidgetController):
         """ Runs a scan with the set scanning parameters. """
         self.runScanAdvanced(sigScanStartingEmitted=False)
 
+    def attrChanged(self, key, value):
+        if self.settingAttr or len(key) != 2:
+            return
+
+        if key[0] == _attrCategoryScan:
+            self._scanParameterDict[key[1]] = value
+            self.setParameters()
+        elif key[0] == _attrCategoryDevices:
+            self._scanParameterDict[key[1]] = value
+            self.setParameters()
+
+    def setSharedAttr(self, category, attr, value):
+        self.settingAttr = True
+        try:
+            self._commChannel.sharedAttrs[(category, attr)] = value
+        finally:
+            self.settingAttr = False
+
+    def updateScanParDict(self):
+
+        self.getParameters()
+        self.setAllSharedAttr()
+
+    def setAllSharedAttr(self):
+        for key, value in self._scanParameterDict.items():
+            self.setSharedAttr(_attrCategoryScan, key, value)
+
     def closeEvent(self):
         pass
 
-_attrCategoryStage = 'ScanStage'
-_attrCategoryTTL = 'ScanTTL'
-
+_attrCategoryScan = 'MS-RESOLFT_Scan'
+_attrCategoryDevices = 'MS-RESOLFT_Dev'
 # Copyright (C) 2020-2021 ImSwitch developers
 # This file is part of ImSwitch.
 #
